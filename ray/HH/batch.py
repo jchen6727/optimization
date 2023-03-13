@@ -14,6 +14,8 @@ class rnr(object):
         self.__osenv = os.environ.copy()
         self.__osenv.update(env)
         self.env = env
+        filevar = env['NETM_SAV'].split('=')[-1].strip()
+        self.filename = "{}_data.json".format(filevar)
 
     def get_command(self):
         return self.cmdstr
@@ -30,8 +32,8 @@ class rnr(object):
         return self.stdout, self.stderr
 
     def gather_data(self):
-        data = json.load()
-
+        self.data = json.load( open(self.filename) )
+        return self.data
 
 
 if __name__ == "__main__":
@@ -46,15 +48,18 @@ if __name__ == "__main__":
         'WEIGHT': [ 0.05, 0.1, 0.15]
     }
     runners = []
+    envs = []
     for i, j in itertools.product(range(3), range(3)):
         env = {
             "NETM_SAV"   : "cfg.filename = batch/RATE_{}_WEIGHT_{}".format(i, j),
             "NETM_RATE"  : envstr['RATE'  ].format(envval['RATE'  ][i]),
             "NETM_WEIGHT": envstr['WEIGHT'].format(envval['WEIGHT'][i]),
         }
+        envs.append(env)
         runner = rnr.remote(np=2, script="net_runner.py", env=env)
         runners.append(runner)
-    results = ray.get([runner.run.remote() for runner in runners])
+    stdouts = ray.get([runner.run.remote() for runner in runners])
+    simdata = ray.get([runner.gather_data.remote() for runner in runners])
     
     
     

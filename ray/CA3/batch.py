@@ -2,21 +2,24 @@ import ray
 import subprocess
 import os
 
+import itertools
+
 @ray.remote
 class rnr(object):
 # run net_runner
-    def __init__(self, np=1, script="net_runner.py"):
+    def __init__(self, np=1, script="net_runner.py", env={}):
         self.np = np
         self.cmdstr = "mpiexec -n {} nrniv -python -mpi {}".format(np, script).split()
         self.pid = None
         self.env = os.environ.copy()
+        self.add_env(env)
 
     def get_command(self):
         return self.cmdstr
 
-    def add_env(self, envars):
-        for var in envars:
-            self.env[var] = envars[var]
+    def add_env(self, env):
+        for key in env:
+            self.env[key] = env[key]
         return self.env
 
     def run(self):
@@ -28,11 +31,25 @@ class rnr(object):
     
 if __name__ == "__main__":
     ray.init()
-    envars = [
-        'netParams.stimSourceParams.IClamp_PYR.amp = '
-        'netParams.stimSourceParams.IClamp_OLM.amp = '
-    ]
-    pyr_amps = [ 25e-3  ,  50e-3,  75e-3  ]
-    olm_amps = [-12.5e-3, -25e-3, -37.5e-3]
-netParams.stimSourceParams['IClamp_PYR'] =  {'type': 'IClamp', 'del': 2*0.1, 'dur': 1e9, 'amp': 50e-3}
-netParams.stimSourceParams['IClamp_OLM'] =  {'type': 'IClamp', 'del': 2*0.1, 'dur': 1e9, 'amp': -25e-3}
+    vars = ['PYR', 'OLM']
+    envstr = {
+        'PYR': "netParams.stimSourceParams.IClamp_PYR.amp = {}",
+        'OLM': "netParams.stimSourceParams.IClamp_OLM.amp = {}"
+    }
+    envval = {
+        'PYR': [ 25e-3  ,  50e-3,  75e-3  ],
+        'OLM': [-12.5e-3, -25e-3, -37.5e-3]
+    }
+    runners = []
+    for i, j in itertools.product(range(3), range(3)):
+        env = {
+            "NETM_SAV".format(i, j): "cfg.filename = sim_pyr{}_olm{}".format(i, j),
+            "NETM_PYR".format(i, j): envstr['PYR'].format(envval['PYR'][i]),
+            "NETM_OLM".format(i, j): envstr['OLM'].format(envval['OLM'][i]),
+        }
+        runner = rnr.remote(np=2, script="net_runner.py", env=env)
+        runners.append(runner)
+    results = ray.get([runner.run.remote() for runner in runners])
+    
+    
+    

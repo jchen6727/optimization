@@ -4,3 +4,5 @@ CA3/output/
 *.dll
 
 CA3/src/__pycache__/
+
+.idea/
