@@ -26,7 +26,7 @@ for i, j in itertools.product(range(3), range(3)):
         "NETM_WEIGHT": envstr['WEIGHT'].format(envval['WEIGHT'][j]),
     }
     envs.append(env)
-    runner = my_remote.remote(np=2, script="runner.py", env=env)
+    runner = my_remote.remote(env=env)
     runners.append(runner)
 stdouts  = ray.get([runner.run.remote() for runner in runners])
 simdatas = ray.get([runner.gather_data.remote() for runner in runners])

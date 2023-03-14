@@ -1,9 +1,9 @@
+import imp
 from netpyne import specs
-
 try:
-    from __main__ import cfg  # import SimConfig object with params from parent module
+    from __main__ import cfg
 except:
-    from cfg import cfg # need to run netParams.py within src directory
+    from cfg import cfg
 
 # Network parameters
 netParams = specs.NetParams()  # object of class NetParams to store the network parameters
@@ -321,8 +321,3 @@ netParams.stimTargetParams['Septal->OLM'] = {
         'weight': 1.6e-3,
         'delay': 2*cfg.dt,
         'synMech': 'GABAss'}
-
-
-### Batch Simulations ###
-netParams.mapping['popParams_PYR_numCells'] = ['popParams', 'PYR', 'numCells']
-netParams.mapping[ 'popParams_BC_numCells'] = ['popParams', 'BC' , 'numCells']

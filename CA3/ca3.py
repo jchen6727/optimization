@@ -1,5 +1,27 @@
 from netpyne import specs
 
+### config ###
+
+cfg = specs.SimConfig()
+
+cfg.duration = 500
+cfg.dt = 0.1
+cfg.hparams = {'v_init': -65.0}
+cfg.verbose = False
+cfg.recordTraces = {'V_soma':{'sec':'soma','loc':0.5,'var':'v'}}  # Dict with traces to record
+cfg.recordStim = False
+cfg.recordStep = 0.1            # Step size in ms to save data (eg. V traces, LFP, etc)
+cfg.filename = '00'         # Set file output name
+cfg.savePickle = True        # Save params, network and sim output to pickle file
+cfg.saveDat = False
+cfg.printRunTime = 0.1 
+cfg.recordLFP = [[50, 50, 50]]
+
+cfg.analysis['plotRaster'] = {'saveFig': True}
+cfg.analysis['plotTraces'] = {'include': [0, 1, 800, 801, 1000, 1001], 'saveFig': True}  # Plot recorded traces for this list of cells
+cfg.analysis['plotLFPTimeSeries'] = {'showFig': True, 'saveFig': True} 
+
+### params ###
 # Network parameters
 netParams = specs.NetParams()  # object of class NetParams to store the network parameters
 netParams.defaultThreshold = 0.0
@@ -205,7 +227,7 @@ netParams.connParams['OLM->PYR_GABA'] = {'preConds': {'pop': 'OLM'}, 'postConds'
 # Setting NetStims
 ###############################################################################
 # to PYR
-netParams.stimSourceParams['NetStim_PYR_SOMA_AMPA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*200, 'start': 0, 'noise': 1}
+netParams.stimSourceParams['NetStim_PYR_SOMA_AMPA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*cfg.duration, 'start': 0, 'noise': 1}
 netParams.stimTargetParams['NetStim_PYR_SOMA_AMPA->PYR'] = {
         'source': 'NetStim_PYR_SOMA_AMPA',
         'conds': {'pop': 'PYR'},
@@ -215,7 +237,7 @@ netParams.stimTargetParams['NetStim_PYR_SOMA_AMPA->PYR'] = {
         'delay': 2*0.1,
         'synMech': 'AMPAf'}
 
-netParams.stimSourceParams['NetStim_PYR_ADEND3_AMPA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*200, 'start': 0, 'noise': 1}
+netParams.stimSourceParams['NetStim_PYR_ADEND3_AMPA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*cfg.duration, 'start': 0, 'noise': 1}
 netParams.stimTargetParams['NetStim_PYR_ADEND3_AMPA->PYR'] = {
         'source': 'NetStim_PYR_ADEND3_AMPA',
         'conds': {'pop': 'PYR'},
@@ -225,7 +247,7 @@ netParams.stimTargetParams['NetStim_PYR_ADEND3_AMPA->PYR'] = {
         'delay': 2*0.1,
         'synMech': 'AMPAf'}
 
-netParams.stimSourceParams['NetStim_PYR_SOMA_GABA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*200, 'start': 0, 'noise': 1}
+netParams.stimSourceParams['NetStim_PYR_SOMA_GABA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*cfg.duration, 'start': 0, 'noise': 1}
 netParams.stimTargetParams['NetStim_PYR_SOMA_GABA->PYR'] = {
         'source': 'NetStim_PYR_SOMA_GABA',
         'conds': {'pop': 'PYR'},
@@ -235,7 +257,7 @@ netParams.stimTargetParams['NetStim_PYR_SOMA_GABA->PYR'] = {
         'delay': 2*0.1,
         'synMech': 'GABAf'}
 
-netParams.stimSourceParams['NetStim_PYR_ADEND3_GABA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*200, 'start': 0, 'noise': 1}
+netParams.stimSourceParams['NetStim_PYR_ADEND3_GABA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*cfg.duration, 'start': 0, 'noise': 1}
 netParams.stimTargetParams['NetStim_PYR_ADEND3_GABA->PYR'] = {
         'source': 'NetStim_PYR_ADEND3_GABA',
         'conds': {'pop': 'PYR'},
@@ -245,7 +267,7 @@ netParams.stimTargetParams['NetStim_PYR_ADEND3_GABA->PYR'] = {
         'delay': 2*0.1,
         'synMech': 'GABAf'}
 
-netParams.stimSourceParams['NetStim_PYR_ADEND3_NMDA'] = {'type': 'NetStim', 'interval': 100, 'number': int((1000/100.0)*200), 'start': 0, 'noise': 1}
+netParams.stimSourceParams['NetStim_PYR_ADEND3_NMDA'] = {'type': 'NetStim', 'interval': 100, 'number': int((1000/100.0)*cfg.duration), 'start': 0, 'noise': 1}
 netParams.stimTargetParams['NetStim_PYR_ADEND3_NMDA->PYR'] = {
         'source': 'NetStim_PYR_ADEND3_NMDA',
         'conds': {'pop': 'PYR'},
@@ -256,7 +278,7 @@ netParams.stimTargetParams['NetStim_PYR_ADEND3_NMDA->PYR'] = {
         'synMech': 'NMDA'}
 
 # to BC
-netParams.stimSourceParams['NetStim_BC_SOMA_AMPA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*200, 'start': 0, 'noise': 1}
+netParams.stimSourceParams['NetStim_BC_SOMA_AMPA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*cfg.duration, 'start': 0, 'noise': 1}
 netParams.stimTargetParams['NetStim_BC_SOMA_AMPA->BC'] = {
         'source': 'NetStim_BC_SOMA_AMPA',
         'conds': {'pop': 'BC'},
@@ -266,7 +288,7 @@ netParams.stimTargetParams['NetStim_BC_SOMA_AMPA->BC'] = {
         'delay': 2*0.1,
         'synMech': 'AMPAf'}
 
-netParams.stimSourceParams['NetStim_BC_SOMA_GABA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*200, 'start': 0, 'noise': 1}
+netParams.stimSourceParams['NetStim_BC_SOMA_GABA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*cfg.duration, 'start': 0, 'noise': 1}
 netParams.stimTargetParams['NetStim_BC_SOMA_GABA->BC'] = {
         'source': 'NetStim_BC_SOMA_GABA',
         'conds': {'pop': 'BC'},
@@ -277,7 +299,7 @@ netParams.stimTargetParams['NetStim_BC_SOMA_GABA->BC'] = {
         'synMech': 'GABAf'}
 
 # to OLM
-netParams.stimSourceParams['NetStim_OLM_SOMA_AMPA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*200, 'start': 0, 'noise': 1}
+netParams.stimSourceParams['NetStim_OLM_SOMA_AMPA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*cfg.duration, 'start': 0, 'noise': 1}
 netParams.stimTargetParams['NetStim_OLM_SOMA_AMPA->OLM'] = {
         'source': 'NetStim_OLM_SOMA_AMPA',
         'conds': {'pop': 'OLM'},
@@ -287,7 +309,7 @@ netParams.stimTargetParams['NetStim_OLM_SOMA_AMPA->OLM'] = {
         'delay': 2*0.1,
         'synMech': 'AMPAf'}
 
-netParams.stimSourceParams['NetStim_OLM_SOMA_GABA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*200, 'start': 0, 'noise': 1}
+netParams.stimSourceParams['NetStim_OLM_SOMA_GABA'] = {'type': 'NetStim', 'interval': 1, 'number': 1000*cfg.duration, 'start': 0, 'noise': 1}
 netParams.stimTargetParams['NetStim_OLM_SOMA_GABA->OLM'] = {
         'source': 'NetStim_OLM_SOMA_GABA',
         'conds': {'pop': 'OLM'},
@@ -298,7 +320,7 @@ netParams.stimTargetParams['NetStim_OLM_SOMA_GABA->OLM'] = {
         'synMech': 'GABAf'}
 
 # Medial Septal inputs to BC and OLM cells
-netParams.stimSourceParams['Septal'] = {'type': 'NetStim', 'interval': 150, 'number': int((1000/150)*200), 'start': 0, 'noise': 0}
+netParams.stimSourceParams['Septal'] = {'type': 'NetStim', 'interval': 150, 'number': int((1000/150)*cfg.duration), 'start': 0, 'noise': 0}
 netParams.stimTargetParams['Septal->BC'] = {
         'source': 'Septal',
         'conds': {'pop': 'BC'},
@@ -316,4 +338,3 @@ netParams.stimTargetParams['Septal->OLM'] = {
         'weight': 1.6e-3,
         'delay': 2*0.1,
         'synMech': 'GABAss'}
-
