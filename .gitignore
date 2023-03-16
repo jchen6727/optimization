@@ -6,3 +6,11 @@ CA3/output/
 CA3/src/__pycache__/
 
 .idea/
+
+*.so
+
+*.c
+
+*.o
+
+CA3/x86_64/

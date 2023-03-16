@@ -4,7 +4,7 @@ from netpyne import specs
 
 cfg = specs.SimConfig()
 
-cfg.duration = 500
+cfg.duration = 10 # 750
 cfg.dt = 0.1
 cfg.hparams = {'v_init': -65.0}
 cfg.verbose = False
@@ -198,7 +198,7 @@ netParams.connParams['PYR->PYR_AMPA'] = {'preConds': {'pop': 'PYR'}, 'postConds'
 # BC -> X, GABA
 netParams.connParams['BC->BC_GABA'] = {'preConds': {'pop': 'BC'}, 'postConds': {'pop': 'BC'},
     'convergence': 60,
-    'weight':4.5e-3,
+    'weight': 4.5e-3,
     'delay': 2,
     'sec': 'soma',
     'loc': 0.5,
