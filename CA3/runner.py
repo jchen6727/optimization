@@ -12,4 +12,8 @@ if __name__ == "__main__":
     nr.set_maps()
     nr.create()
     nr.simulate()
-    nr.save()
+    nr.sim.pc.barrier()
+    if nr.sim.rank == 0:
+        data = sim.analysis.prepareSpikeData()['legendLabels']
+        for datm in data:
+            print(datm)

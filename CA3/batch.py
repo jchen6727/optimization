@@ -10,12 +10,13 @@ import time
 class my_remote(remote_runner.remote_runner):
     "inherit remote_runner.remote_runner"
     cmdstr = "mpiexec -n 4 nrniv -python -mpi runner.py"
-    def gather_data(self):
-        filename = "{}_data.pkl".format(self.filename)
-        self.data = pickle.load( open(filename, 'rb') )
-        return self.data
+#    def gather_data(self): # file I/O very slow. Using PIPE
+#        filename = "{}_data.pkl".format(self.filename)
+#        self.data = pickle.load( open(filename, 'rb') )
+#        return self.data
 
-# ray.init()
+
+ray.init(num_cpus = 3)
 # get any of the keys with:
 # [conn for conn in netParams.connParams.keys() if r in conn] # r is 'NMDA', 'AMPA', 'GABA'
 
@@ -51,13 +52,17 @@ for ixs in itertools.product(range(2), range(2), range(2)):
 
 tic = time.time()
 stdouts  = ray.get([runner.run.remote() for runner in runners])
-print("batch simulation run & save time: {}".format(time.time() - tic))
-tic = time.time()
-simdatas = ray.get([runner.gather_data.remote() for runner in runners])
-print("batch simulation read time: {}".format(time.time() - tic))
+print("batch simulation run time: {}".format(time.time() - tic))
 
-for simdata in simdatas:
-    print(simdata['net']['params']['connParams']['BC->BC_GABA'])
-    print(simdata['net']['params']['connParams']['BC->PYR_GABA'])
-    print(simdata['net']['params']['connParams']['OLM->PYR_GABA'])
-    print(simdata['simData']['avgRate'])
+for stdout, stderr in stdouts:
+    olm, bc, pyr = stdout.split('\n')[-2:-14:-4]
+    
+#tic = time.time()
+#simdatas = ray.get([runner.gather_data.remote() for runner in runners])
+#print("batch simulation read time: {}".format(time.time() - tic))
+
+#for simdata in simdatas:
+#    print(simdata['net']['params']['connParams']['BC->BC_GABA'])
+#    print(simdata['net']['params']['connParams']['BC->PYR_GABA'])
+#    print(simdata['net']['params']['connParams']['OLM->PYR_GABA'])
+#    print(simdata['simData']['avgRate'])
