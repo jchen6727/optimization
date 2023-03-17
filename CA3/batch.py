@@ -2,8 +2,7 @@ from avatk.runners import remote_runner
 import ray
 import numpy
 import itertools
-import pickle
-
+import json
 import time
 
 @ray.remote
@@ -54,9 +53,11 @@ tic = time.time()
 stdouts  = ray.get([runner.run.remote() for runner in runners])
 print("batch simulation run time: {}".format(time.time() - tic))
 
+jsons = []
 for stdout, stderr in stdouts:
-    olm, bc, pyr = stdout.split('\n')[-2:-14:-4]
-    
+    jsonstr = stdout.split('DELIMDELIMDELIM')[-1]
+    jsons.append(jsonstr)
+
 #tic = time.time()
 #simdatas = ray.get([runner.gather_data.remote() for runner in runners])
 #print("batch simulation read time: {}".format(time.time() - tic))
