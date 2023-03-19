@@ -1,4 +1,4 @@
-from avatk.runners import net_runner
+from avatk.runtk import net_runner
 from netpyne import sim
 from ca3 import netParams, cfg
 import json
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     nr.simulate()
     nr.sim.pc.barrier()
     if nr.sim.rank == 0: # prepare dictionary to dump to output
-        json_out = {'map': nr.get_maps()}
+        json_out = nr.get_maps()
         data_out = sim.analysis.prepareSpikeData()['legendLabels']
         for datm in data_out:
             pop = datm.split('\n')[0]

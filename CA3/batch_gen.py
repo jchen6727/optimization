@@ -1,4 +1,8 @@
-from avatk.runners import remote_runner
+"""
+generates batch rather than reading from a CSV.
+"""
+
+from avatk.runtk import remote_runner
 import ray
 import numpy
 import itertools
@@ -56,7 +60,7 @@ print("batch simulation run time: {}".format(time.time() - tic))
 jsons = []
 for stdout, stderr in stdouts:
     jsonstr = stdout.split('DELIMDELIMDELIM')[-1]
-    jsons.append(jsonstr)
+    jsons.append(json.loads(jsonstr))
 
 #tic = time.time()
 #simdatas = ray.get([runner.gather_data.remote() for runner in runners])
