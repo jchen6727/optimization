@@ -2,7 +2,7 @@
 example: generate batch with GABA weight parameter sweep
 """
 
-from avatk.runtk.remote_runner import remote_runner
+from avatk.runtk.runners import remote_runner
 import ray
 import numpy
 import itertools

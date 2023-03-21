@@ -1,39 +1,37 @@
-from avatk.runtk.remote_runner import remote_runner
+from avatk.runtk.runners import remote_runner
 import ray
-import numpy
-import itertools
-import json
 import pandas
 import time
 
-#@ray.remote
+ray.init(num_cpus=1)
+
+
+@ray.remote
 class rr(remote_runner):
     "inherit remote_runner.remote_runner"
     cmdstr = "mpiexec -n 4 nrniv -python -mpi runner.py"
 
-#ray.init(num_cpus = 1)
 
-batches = []
-def get_run(row: pandas.Series):
+def init_run(row: pandas.Series):
     env = row.to_dict()
     run = env.pop('run')
-    #runner = rr.remote(env=env)
-    runner = rr(env=env)
-    row['rr'] = runner
-    print("created run:\t{}\t with params:\n{}".format(run, env))
+    netm_env = {"NETM{}".format(i):
+                    "{}={}".format(key, env[key]) for i, key in enumerate(env.keys())}
+    # runner = rr.remote(env=netm_env)
+    runner = rr.remote(env=netm_env)
+    print("created run:\t{}\t with environment:\n{}".format(run, netm_env))
     return runner
 
-def to_dict(row: (dict, pandas.Series)):
-    row.rename({ key: rename(key) for key in row.axes})
-    return row
+def get_run(rrobj: remote_runner):
+    stdouts = ray.get(rrobj.run.remote())
+    return stdouts
+def run_csv(csv: str):
+    _jobs = pandas.read_csv(csv)
+    _runners = _jobs.apply(init_run, axis=1)
+    return _jobs, _runners
 
-def rename(name: str):
-    name.translate({ord(c): 'DELIM' for c in '->'})
-    return name
-def run_csv(csv= 'batch_csv/run0.csv'):
-    jobs = pandas.read_csv(csv)
-    runners = jobs.apply(get_run, axis= 1)
-    return jobs, runners
 
-jobs, runners = run_csv()
+jobs, runners = run_csv("batch_csv/test.csv")
 
+# might be better to maintain this as a for loop
+stdouts = runners.apply(get_run)
