@@ -3,13 +3,14 @@ import ray
 import pandas
 import time
 
-ray.init(num_cpus=1)
-
+#ray.init(num_cpus=1)
+ray.init()
 
 @ray.remote
 class rr(remote_runner):
     "inherit remote_runner.remote_runner"
-    cmdstr = "mpiexec -n 4 nrniv -python -mpi runner.py"
+#    cmdstr = "mpiexec -n 4 nrniv -python -mpi runner.py"
+    cmdstr = "python runner.py"
 
 
 def init_run(row: pandas.Series):
@@ -23,15 +24,22 @@ def init_run(row: pandas.Series):
     return runner
 
 def get_run(rrobj: remote_runner):
-    stdouts = ray.get(rrobj.run.remote())
+    stdouts = ray.get(rrobj.run.remote()).split
     return stdouts
+
 def run_csv(csv: str):
     _jobs = pandas.read_csv(csv)
     _runners = _jobs.apply(init_run, axis=1)
     return _jobs, _runners
 
+def get_data(output: str)
+    output.split("DELIM")
+    
+
 
 jobs, runners = run_csv("batch_csv/test.csv")
 
-# might be better to maintain this as a for loop
+# might be better to implement this as a for loop?
 stdouts = runners.apply(get_run)
+
+del runners
