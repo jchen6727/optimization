@@ -19,8 +19,8 @@ app.layout = html.Div([
 
 
 )
-def filter_MSE(self: pandas.DataFrame, ub):
-    return self[(self.MSE < ub)]
+def filter_MSE(df: pandas.DataFrame, ub):
+    return df[(self. < ub)]
 
 filenames = ["batch_csv/out{}.csv".format(i) for i in range(11)]
 
