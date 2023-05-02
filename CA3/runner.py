@@ -27,6 +27,6 @@ if __name__ == "__main__":
         for datm in data_out:
             pop = datm.split('\n')[0]
             freq = datm.split(' ')[-2]
-            json_out[pop]  = freq
+            json_out[pop] = freq
         json_str = json.dumps(json_out)
         print("DELIM{}".format(json_str))

@@ -19,4 +19,4 @@ def agg_csv(files, target=None):
     df = pandas.concat([pandas.read_csv(file) for file in files]).reset_index(drop=True)  
     if target:
         df.to_csv(target, index=False)
-    return df  
+    return df
