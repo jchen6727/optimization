@@ -14,4 +14,9 @@ CA3/src/__pycache__/
 *.o
 
 CA3/x86_64/
+<<<<<<< Updated upstream
 /CA3/__pycache__/**
+=======
+
+CA3/__pycache__/
+>>>>>>> Stashed changes
