@@ -19,7 +19,7 @@ class rr(dispatcher):
 if __name__ == "__main__":
     r = nr()
     r.set_mappings()
-    json_out = r.get_mappings()
+    #json_out = r.get_mappings()
     #print("DELIM{}".format(json_out))
 
     r.create()

@@ -8,7 +8,7 @@ from ray import tune
 from ray.air import session
 from ray.tune.search.optuna import OptunaSearch
 
-
+ray.init()
 TARGET = pandas.Series(
     {'PYR': 2.35,
      'BC': 14.3,
@@ -22,18 +22,23 @@ def mse(run: pandas.Series, values = TARGET.keys()):
 def run(config):
     netm_env = {"NETM{}".format(i):
                     "{}={}".format(key, config[key]) for i, key in enumerate(config.keys())}
-    runner = dispatcher(cmdstr = "python runner.py", env = netm_env)
+    runner = dispatcher(cmdstr = "python /home/jchen/dev/optimization/CA3/runner.py", env = netm_env)
     stdouts, stderr = runner.run()
     print(stdouts)
-    data = pandas.Series(json.loads(stdouts.split("DELIM"))[-1])
-    return data
+    data = 5
+    #data = pandas.Series(json.loads(stdouts.split("DELIM"))[-1])
+    return stdouts, stderr, data
 
 
 def objective(config):
-    data = run(config)
-    loss = mse(data)
-    report = dict(loss=loss, **loss)
+    stdouts, stderr, data = run(config)
+    #loss = mse(data)
+    loss = 5
+    report = dict(stdouts= stdouts, stderr= stderr, loss=loss)#, **loss)
     session.report(report)
+
+
+
 
 tuner = tune.Tuner(
     objective,
