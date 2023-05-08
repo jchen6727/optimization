@@ -2,6 +2,7 @@ from avatk.runtk.runners import dispatcher, netpyne_runner
 from netpyne import sim
 from ca3 import netParams, cfg
 import json
+import os
 
 #define parameter strings
 class nr(netpyne_runner):
@@ -10,18 +11,12 @@ class nr(netpyne_runner):
     netParams = netParams
     cfg = cfg
 
-
-class rr(dispatcher):
-    "inherit the remote_runner"
-    cmdstr = "mpiexec -n 4 nrniv -python -mpi runner.py"
-
-
 if __name__ == "__main__":
     r = nr()
     r.set_mappings()
+    r.sim.h.nrn_load_dll('/home/jchen/dev/optimization/CA3/x86_64/libnrnmech.so')
     #json_out = r.get_mappings()
     #print("DELIM{}".format(json_out))
-
     r.create()
     r.simulate()
     r.sim.pc.barrier()
