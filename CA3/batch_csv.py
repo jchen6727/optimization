@@ -1,4 +1,4 @@
-from avatk.runtk.runners import dispatcher
+from avatk.runtk.runners import remote_runner
 import ray
 import pandas
 import json
@@ -8,7 +8,7 @@ import numpy
 ray.init()
 
 @ray.remote
-class rr(dispatcher):
+class rr(remote_runner):
     "inherit remote_runner.remote_runner"
 #    cmdstr = "mpiexec -n 4 nrniv -python -mpi runner.py"
     cmdstr = "python runner.py"
@@ -23,12 +23,11 @@ def init_run(row: pandas.Series):
     print("created run:\t{}\t with environment:\n{}".format(run, netm_env))
     return runner
 
-def get_run(rrobj: dispatcher):
-    stdout, stderr = ray.get(rrobj.run.remote())
+def get_run(rrobj: remote_runner):
+    stdouts, stderr = ray.get(rrobj.run.remote())
     if not stderr:
         print(stderr)
-    return stdout
-
+    return stdouts
 
 def get_dfs(csv: str, max_nodes: int):
     # reads csv, splits csv into a list of dataframes with size max_nodes
@@ -50,23 +49,17 @@ def run_csv(in_csv: str, out_csv: str):
     for _bin in bins:
         runners = run_df(_bin)
         stdouts = runners.apply(get_run)
-        print(stdouts)
         df = stdouts.apply(get_data)
         print(df)
         outlist.append(df)
-        #outlist.append(stdouts)
     outdf = pandas.concat(outlist)
     outdf.to_csv(out_csv)
     print("wrote: {}".format(out_csv))
     return outdf
 
-outs = run_csv("batch_csv/test.csv", "batch_csv/testout.csv")
-
-
-"""
 for i in range(11):
     run_csv("batch_csv/run{}.csv".format(i), "batch_csv/out{}.csv".format(i))
-"""
+
 
 
 """
