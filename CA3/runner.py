@@ -4,6 +4,7 @@ from ca3 import netParams, cfg
 import json
 import os
 
+DLL = '/ddn/jchen/dev/CA3/x86_64/libnrnmech.so'
 #define parameter strings
 class nr(netpyne_runner):
     "inherit the process_runner"
@@ -14,7 +15,7 @@ class nr(netpyne_runner):
 if __name__ == "__main__":
     r = nr()
     r.set_mappings()
-    r.sim.h.nrn_load_dll('/home/jchen/dev/optimization/CA3/x86_64/libnrnmech.so')
+    r.sim.h.nrn_load_dll(DLL)
     #json_out = r.get_mappings()
     #print("DELIM{}".format(json_out))
     r.create()
@@ -29,3 +30,4 @@ if __name__ == "__main__":
             json_out[pop] = freq
         json_str = json.dumps(json_out)
         print("DELIM{}".format(json_str))
+        
