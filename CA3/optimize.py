@@ -10,7 +10,7 @@ from ray.air import session
 from ray.tune.search.optuna import OptunaSearch
 
 
-CMDSTR = "/ddn/jchen/miniconda3/envs/dev/bin/python /ddn/jchen/dev/CA3/runner.py"
+CMDSTR = "/ddn/jchen/miniconda3/envs/dev/bin/python /ddn/jchen/dev/optimization/CA3/runner.py"
 NTRIALS = 3
 ray.init()
 TARGET = pandas.Series(

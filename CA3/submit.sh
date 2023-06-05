@@ -23,5 +23,5 @@ cd input
 #rsync -av $SGE_O_WORKDIR/references/ input/
 tree
 #conda activate dev
-~/miniconda3/envs/dev/bin/python optimize.py --inFiles $TMPDIR/input --outFiles $TMPDIR/output --parallel $NSLOTS
+~/miniconda3/envs/dev/bin/python optimize.py
 rsync -a $TMPDIR/output $SGE_O_WORKDIR/processed/
