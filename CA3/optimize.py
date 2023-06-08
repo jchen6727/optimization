@@ -5,13 +5,26 @@ import json
 import numpy
 
 import os
+import shutil
 from ray import tune
 from ray.air import session
 from ray.tune.search.optuna import OptunaSearch
+from ray.tune.search import ConcurrencyLimiter
 
+#CMDSTR = "/ddn/jchen/miniconda3/envs/dev/bin/python /ddn/jchen/dev/optimization/CA3/runner.py"
+#CMDSTR = "python runner.py"
 
-CMDSTR = "/ddn/jchen/miniconda3/envs/dev/bin/python /ddn/jchen/dev/optimization/CA3/runner.py"
-NTRIALS = 3
+CORES = 4
+kwargs = {
+#    'mpiexec': shutil.which('mpiexec'),
+#    'cores': CORES,
+    'python': shutil.which('python'),
+    'script': os.getcwd() + '/' + 'runner.py'
+}
+#CMDSTR = "{mpiexec} -n {cores} {python} {script}".format(**kwargs)
+CMDSTR = "{python} {script}".format(**kwargs)
+NTRIALS = 4
+
 ray.init()
 TARGET = pandas.Series(
     {'PYR': 2.35,
@@ -46,10 +59,12 @@ def objective(config):
     #report = dict(loss=loss, stdouts=stdouts, stderr=stderr)
     session.report(report)
 
+algo = ConcurrencyLimiter(searcher=OptunaSearch(), max_concurrent= 2, batch= True)
+
 tuner = tune.Tuner(
     objective,
     tune_config=tune.TuneConfig(
-        search_alg=OptunaSearch(),
+        search_alg=algo,
         num_samples=NTRIALS,
         metric="loss",
         mode="min"

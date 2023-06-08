@@ -4,7 +4,7 @@ from ca3 import netParams, cfg
 import json
 import os
 
-DLL = '/ddn/jchen/dev/optimization/CA3/x86_64/libnrnmech.so'
+DLL = '/ddn/jchen/dev/optimization/CA3/mod/x86_64/libnrnmech.so'
 #define parameter strings
 class nr(netpyne_runner):
     "inherit the process_runner"
