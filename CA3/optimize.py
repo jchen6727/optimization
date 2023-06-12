@@ -11,17 +11,30 @@ from ray.air import session
 from ray.tune.search.optuna import OptunaSearch
 from ray.tune.search import ConcurrencyLimiter
 
-CORES = 4
+import argparse
+
+## specify CLI to function
+parser = argparse.ArgumentParser()
+
+parser.add_argument('-c', '--concurrency', default=1)
+parser.add_argument('-t', '--trials', default=5)
+parser.add_argument('-s', '--save', default="output/tune")
+#parser.add_argument('-python')
+args, call= parser.parse_known_args()
+args= dict(args._get_kwargs())
+
 kwargs = {
 #    'mpiexec': shutil.which('mpiexec'),
+#    'nrniv': shutil.which('nrniv'),
 #    'cores': CORES,
     'python': shutil.which('python'),
     'script': os.getcwd() + '/' + 'runner.py'
 }
-#CMDSTR = "{mpiexec} -n {cores} {python} {script}".format(**kwargs)
-CMDSTR = "{python} {script}".format(**kwargs)
-NTRIALS = 4
 
+CMDSTR = "{python} {script}".format(**kwargs)
+CONCURRENCY = int(args['concurrency'])
+NTRIALS = int(args['trials'])
+SAVESTR = args['save']
 ray.init()
 TARGET = pandas.Series(
     {'PYR': 2.35,
@@ -56,7 +69,7 @@ def objective(config):
     #report = dict(loss=loss, stdouts=stdouts, stderr=stderr)
     session.report(report)
 
-algo = ConcurrencyLimiter(searcher=OptunaSearch(), max_concurrent= 2, batch= True)
+algo = ConcurrencyLimiter(searcher=OptunaSearch(), max_concurrent= CONCURRENCY, batch= True)
 
 tuner = tune.Tuner(
     objective,
@@ -77,4 +90,4 @@ results = tuner.fit()
 
 resultsdf = results.get_dataframe()
 
-resultsdf.to_csv('output/trial.csv')
+resultsdf.to_csv("{}_{}_{}.csv".format(SAVESTR, CONCURRENCY, NTRIALS))
