@@ -6,7 +6,7 @@ BSTR = 'AMPA' # or NMDA or GABA
 def get_weight(conn):
     return netParams['connParams'][conn]['weight']
 
-def get_batchlist(weight, function= numpy.linspace, scaling= 10, size = 8):
+def get_batchlist(weight, function= numpy.linspace, scaling= 10, size = 10):
     return function( weight / scaling, weight * scaling, size )
 
 conns = {"netParams.connParams.{}.weight".format(conn): get_batchlist(get_weight(conn)) for conn in
