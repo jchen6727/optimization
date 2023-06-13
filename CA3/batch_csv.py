@@ -44,7 +44,7 @@ def get_data(output: pandas.Series):
     return pds
 
 def run_csv(in_csv: str, out_csv: str):
-    bins = get_dfs(in_csv, 3)
+    bins = get_dfs(in_csv, 50)
     print("read: {}".format(in_csv))
     outlist = []
     for _bin in bins:
