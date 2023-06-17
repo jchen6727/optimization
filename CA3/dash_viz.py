@@ -6,11 +6,24 @@ import plotly.express as px
 from dash import Dash, html, dcc, callback, Output, Input
 import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--filename', default="NMDAf.csv")
+
+args, call= parser.parse_known_args()
+args= dict(args._get_kwargs())
 
 app = Dash(__name__)
 
-df = pandas.read_csv("AMPAf.csv")
-df = df.drop(['Unnamed: 0'], axis=1).reset_index(drop=True)
+df = pandas.read_csv(args['filename'])
+
+#get synaptic weight parameters
+x, y, z = [key for key in df.keys() if '->' in key]
+
+range_x = [df[x].min(), df[x].max()]
+range_y = [df[y].min(), df[y].max()]
+range_z = [df[z].min(), df[z].max()]
+
+#df = df.drop(['Unnamed: 0'], axis=1).reset_index(drop=True)
 df['MSE'] = df.apply(utils.mse, axis=1)
 
 app.layout = html.Div([
@@ -26,13 +39,13 @@ app.layout = html.Div([
 def update_figure(value):
     dff = df[df['MSE'] < value]
     fig = px.scatter_3d(dff,
-                        x='netParams.connParams.PYR->BC_AMPA.weight',
-                        y='netParams.connParams.PYR->OLM_AMPA.weight',
-                        z='netParams.connParams.PYR->PYR_AMPA.weight',
+                        x=x,
+                        y=y,
+                        z=z,
                         color='MSE',
-                        range_x=[3.6e-5, 0.0036],
-                        range_y=[3.6e-5, 0.0036],
-                        range_z=[2e-6, 0.0002]
+                        range_x=range_x,
+                        range_y=range_y,
+                        range_z=range_z,
                         )
     return fig
 
