@@ -60,19 +60,29 @@ def run(config):
     stdouts, stderr = runner.run()
     data = stdouts.split("DELIM")[-1]
     sdata = pandas.Series(json.loads(data)).astype(float)
-    return stdouts, stderr, data, sdata
-    #return stdouts, stderr
-
-#TODO reduce return values
-#TODO place return values in a separate debug version of optimize
-
+    return sdata
+    
 def objective(config):
-    stdouts, stderr, data, sdata = run(config)
-    #stdouts, stderr = run(config)
+    sdata = run(config)
     loss = mse(sdata)
-    #loss = 5
     report = dict(sdata=sdata, PYR=sdata['PYR'], BC=sdata['BC'], OLM=sdata['OLM'], loss=loss)#, **loss)
-    #report = dict(loss=loss, stdouts=stdouts, stderr=stderr)
+    session.report(report)
+
+
+def dbrun(config): 
+    # debug optimization run 
+    netm_env = {"NETM{}".format(i):
+                    "{}={}".format(key, config[key]) for i, key in enumerate(config.keys())}
+    cmdstr = CMDSTR
+    runner = dispatcher(cmdstr= cmdstr, env= netm_env)
+    stdouts, stderr = runner.run()
+    return stdouts, stderr
+
+def dbobjective(config):
+    # debug objective of a remote process
+    stdouts, stderr = dbrun(config)
+    loss = 0
+    report = dict(loss=loss, stdouts=stdouts, stderr=stderr)
     session.report(report)
 
 algo = ConcurrencyLimiter(searcher=OptunaSearch(), max_concurrent= CONCURRENCY, batch= True)

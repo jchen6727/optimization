@@ -26,6 +26,7 @@ range_z = [df[z].min(), df[z].max()]
 #df = df.drop(['Unnamed: 0'], axis=1).reset_index(drop=True)
 df['MSE'] = df.apply(utils.mse, axis=1)
 
+
 app.layout = html.Div([
     html.H1(children="Fitness (MSE)", style={'textAlign':'center'}),
     dcc.Slider(0.1, 2.5, 0.1,

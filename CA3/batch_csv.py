@@ -4,10 +4,14 @@ import pandas
 import json
 import numpy
 
+import argparse
+import time
+
+
 #ray.init(num_cpus=1)
 ray.init()
 
-@ray.remote
+@ray.remote(num_cpus= 4)
 class rr(remote_runner):
     "inherit remote_runner.remote_runner"
 #    cmdstr = "mpiexec -n 4 nrniv -python -mpi runner.py"
@@ -29,10 +33,10 @@ def get_run(rrobj: remote_runner):
         print(stderr)
     return stdouts
 
-def get_dfs(csv: str, max_nodes: int):
-    # reads csv, splits csv into a list of dataframes with size max_nodes
+def get_dfs(csv: str, concurrency: int):
+    # reads csv, splits csv into a list of dataframes with size concurrency
     jobs = pandas.read_csv(csv)
-    return [jobs[i:j] for i, j in zip( numpy.arange( 0, len(jobs), max_nodes) , numpy.arange( max_nodes, len(jobs) + max_nodes, max_nodes) )]
+    return [jobs[i:j] for i, j in zip( numpy.arange( 0, len(jobs), concurrency) , numpy.arange( concurrency, len(jobs) + concurrency, concurrency) )]
 
 def run_df(df: pandas.DataFrame):
     runners = df.apply(init_run, axis=1)
@@ -42,8 +46,8 @@ def get_data(output: pandas.Series):
     pds = pandas.Series(json.loads(output.split("DELIM")[-1]))
     return pds
 
-def run_csv(in_csv: str, out_csv: str):
-    bins = get_dfs(in_csv, 50)
+def run_csv(in_csv: str, out_csv: str, concurrency: int):
+    bins = get_dfs(in_csv, concurrency)
     print("read: {}".format(in_csv))
     outlist = []
     for _bin in bins:
@@ -58,30 +62,4 @@ def run_csv(in_csv: str, out_csv: str):
     return outdf
 
 for i in range(11):
-    run_csv("batch_csv/run{}.csv".format(i), "batch_csv/out{}.csv".format(i))
-
-
-
-"""
-def run_csv(csv: str):
-    _jobs = pandas.read_csv(csv)
-    _runners = _jobs.apply(init_run, axis=1)
-    return _jobs, _runners
-"""
-    
-"""
-bins = get_dfs("batch_csv/test.csv", 3)
-batchdata = []
-for _bin in bins:
-    runners = run_df(_bin)
-    stdouts = runners.apply(get_run)
-    batchdata.append(stdouts.apply(get_data))
-"""
-
-
-#jobs, runners = run_csv("batch_csv/test.csv")
-
-# might be better to implement this as a for loop?
-#stdouts = runners.apply(get_run)
-
-#del runners
+    run_csv("batch_csv/run{}.csv".format(i), "batch_csv/out{}.csv".format(i), 3)
