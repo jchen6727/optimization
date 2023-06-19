@@ -14,8 +14,8 @@ ray.init()
 @ray.remote(num_cpus=4)
 class rr(remote_runner):
     "inherit remote_runner.remote_runner"
-#    cmdstr = "mpiexec -n 4 nrniv -python -mpi runner.py"
-    cmdstr = "python runner.py"
+    cmdstr = "mpiexec -n 4 nrniv -python -mpi runner.py"
+#    cmdstr = "python runner.py"
 
 def init_run(row: pandas.Series):
     env = row.to_dict()
