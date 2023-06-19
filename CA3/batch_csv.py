@@ -11,7 +11,7 @@ import time
 #ray.init(num_cpus=1)
 ray.init()
 
-@ray.remote(num_cpus= 4)
+@ray.remote(num_cpus=4)
 class rr(remote_runner):
     "inherit remote_runner.remote_runner"
 #    cmdstr = "mpiexec -n 4 nrniv -python -mpi runner.py"
@@ -52,8 +52,11 @@ def run_csv(in_csv: str, out_csv: str, concurrency: int):
     outlist = []
     for _bin in bins:
         runners = run_df(_bin)
+        tstart = time.time()
         stdouts = runners.apply(get_run)
+        trun = time.time() - tstart
         df = stdouts.apply(get_data)
+        df['runtime'] = trun
         print(df)
         outlist.append(df)
     outdf = pandas.concat(outlist)

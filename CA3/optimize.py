@@ -86,6 +86,7 @@ def dbobjective(config):
     session.report(report)
 
 algo = ConcurrencyLimiter(searcher=OptunaSearch(), max_concurrent= CONCURRENCY, batch= True)
+algo = tune.with_resources(algo, {'cpu': 4})
 
 ampa_space={#AMPA search space
     "netParams.connParams.PYR->BC_AMPA.weight":  tune.uniform(0.36e-4, 0.36e-2),
