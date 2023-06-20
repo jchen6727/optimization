@@ -24,7 +24,7 @@ range_y = [df[y].min(), df[y].max()]
 range_z = [df[z].min(), df[z].max()]
 
 #df = df.drop(['Unnamed: 0'], axis=1).reset_index(drop=True)
-df['MSE'] = df.apply(utils.mse, axis=1)
+df['MSE'] = df.apply(utils.mse, axis=1, target=utils.target)
 
 
 app.layout = html.Div([

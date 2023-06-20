@@ -4,7 +4,7 @@ from netpyne import specs
 
 cfg = specs.SimConfig()
 
-cfg.duration = 1000
+cfg.duration = 300
 cfg.dt = 0.1
 cfg.hparams = {'v_init': -65.0}
 cfg.verbose = False

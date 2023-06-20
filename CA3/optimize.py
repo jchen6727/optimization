@@ -1,4 +1,5 @@
 from avatk.runtk.runners import dispatcher
+
 import ray
 import pandas
 import json
@@ -15,10 +16,9 @@ import argparse
 
 ## specify CLI to function
 parser = argparse.ArgumentParser()
-
 parser.add_argument('-c', '--concurrency', default=1)
 parser.add_argument('-t', '--trials', default=5)
-parser.add_argument('-s', '--save', default="output/tune")
+parser.add_argument('-s', '--save', '-o', '--output', default="output/tune")
 #parser.add_argument('-python')
 args, call= parser.parse_known_args()
 args= dict(args._get_kwargs())
@@ -32,24 +32,25 @@ kwargs = {
 }
 
 # singlecore command string
-CMDSTR = "{python} {script}".format(**kwargs)
+#CMDSTR = "{python} {script}".format(**kwargs)
 
 # multicore command string
-CMDSTR = "{mpiexec} $(hostname) -n {cores} {nrniv} -python -mpi -nobanner -nogui {script}".format(**kwargs)
-
+CMDSTR = "{mpiexec} -n {cores} {nrniv} -python -mpi -nobanner -nogui {script}".format(**kwargs)
 CONCURRENCY = int(args['concurrency'])
 NTRIALS = int(args['trials'])
-SAVESTR = args['save']
-ray.shutdown()
-ray.init()
+SAVESTR = "{}_{}_{}.csv".format(args['save'], CONCURRENCY, NTRIALS)
+
+ray.init(runtime_env={"working_dir": "."}) # needed for import statements
+#ray.init(runtime_env={"py_modules": [os.getcwd()]})
 TARGET = pandas.Series(
     {'PYR': 2.35,
      'BC': 14.3,
      'OLM': 4.83})
 
-def mse(run: pandas.Series, values = TARGET.keys()):
+def mse(run: pandas.Series, target: pandas.Series):
+    values = target.keys()
     freqs = run[values]
-    return numpy.square(TARGET - freqs).mean()
+    return numpy.square(target - freqs).mean()
 
 
 def run(config):
@@ -58,14 +59,14 @@ def run(config):
     cmdstr = CMDSTR
     runner = dispatcher(cmdstr= cmdstr, env= netm_env)
     stdouts, stderr = runner.run()
-    data = stdouts.split("DELIM")[-1]
+    data = stdouts.split("===FREQUENCIES===\n")[-1]
     sdata = pandas.Series(json.loads(data)).astype(float)
     return sdata
     
 def objective(config):
     sdata = run(config)
-    loss = mse(sdata)
-    report = dict(sdata=sdata, PYR=sdata['PYR'], BC=sdata['BC'], OLM=sdata['OLM'], loss=loss)#, **loss)
+    loss = mse(sdata, TARGET)
+    report = dict(sdata=sdata, PYR=sdata['PYR'], BC=sdata['BC'], OLM=sdata['OLM'], MSE=loss, loss=loss)#, **loss)
     session.report(report)
 
 
@@ -85,8 +86,14 @@ def dbobjective(config):
     report = dict(loss=loss, stdouts=stdouts, stderr=stderr)
     session.report(report)
 
+def write_csv(dataframe: pandas.DataFrame, savestring: str):
+    if '/' in savestring:
+        os.makedirs(savestring.rsplit('/', 1)[0], exist_ok=True)
+    dataframe.to_csv(savestring)
+    
+
+#algo = tune.with_resources(OptunaSearch(), {'cpu': 4}) #TODO not working, error
 algo = ConcurrencyLimiter(searcher=OptunaSearch(), max_concurrent= CONCURRENCY, batch= True)
-algo = tune.with_resources(algo, {'cpu': 4})
 
 ampa_space={#AMPA search space
     "netParams.connParams.PYR->BC_AMPA.weight":  tune.uniform(0.36e-4, 0.36e-2),
@@ -119,4 +126,4 @@ results = tuner.fit()
 
 resultsdf = results.get_dataframe()
 
-resultsdf.to_csv("{}_{}_{}.csv".format(SAVESTR, CONCURRENCY, NTRIALS))
+write_csv(resultsdf, SAVESTR)

@@ -4,7 +4,7 @@ from ca3 import netParams, cfg
 import json
 import os
 
-DLL = '/ddn/jchen/dev/optimization/CA3/mod/x86_64/libnrnmech.so'
+DLL = '/home/chen5/dev/optimization/CA3/mod/x86_64/libnrnmech.so'
 #define parameter strings
 class nr(netpyne_runner):
     "inherit the process_runner"
@@ -29,5 +29,5 @@ if __name__ == "__main__":
             freq = datm.split(' ')[-2]
             json_out[pop] = freq
         json_str = json.dumps(json_out)
-        print("DELIM{}".format(json_str))
+        print("===FREQUENCIES===\n{}".format(json_str))
         
