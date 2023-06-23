@@ -3,9 +3,6 @@ from netpyne import sim
 
 from ca3 import netParams, cfg
 import json
-import os
-
-PATH = os.getcwd()
 
 SO = '/ddn/jchen/dev/optimization/CA3/mod/x86_64/libnrnmech.so'
 MECH = '/ddn/jchen/dev/optimization/CA3/mod'

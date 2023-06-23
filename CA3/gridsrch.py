@@ -4,6 +4,7 @@ import pandas
 import shutil
 import os
 
+import numpy
 from ray import tune
 from ray.air import session
 from ray.tune.search.optuna import OptunaSearch
@@ -14,8 +15,10 @@ import argparse
 ## specify CLI to function
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--concurrency', default=1)
-parser.add_argument('-t', '--trials', default=5)
-parser.add_argument('-s', '--save', '-o', '--output', default="output/tune")
+parser.add_argument('-d', '-div', nargs=3, type=float, default=[0.5, 1.5, 3])
+parser.add_argument('-s', '--save', '-o', '--output', default="output/grid")
+parser.add_argument('-t', '--params', nargs='+', default=['PYR->BC_AMPA', 'PYR->OLM_AMPA', 'PYR->PYR_AMPA'])
+
 args, call= parser.parse_known_args()
 args= dict(args._get_kwargs())
 
@@ -31,7 +34,7 @@ kwargs = {
 CMDSTR = "{mpiexec} -n {cores} {nrniv} -python -mpi -nobanner -nogui {script}".format(**kwargs)
 CONCURRENCY = int(args['concurrency'])
 NTRIALS = int(args['trials'])
-SAVESTR = "{}_{}_{}.csv".format(args['save'], CONCURRENCY, NTRIALS)
+SAVESTR = "{}_{}.csv".format(args['save'], CONCURRENCY, NTRIALS)
 
 ray.init(runtime_env={"working_dir": "."}) # needed for import statements
 #ray.init(runtime_env={"py_modules": [os.getcwd()]})
@@ -54,16 +57,21 @@ initial_params = { # weights from cfg, AMPA, GABA, NMDA
     'PYR->PYR_AMPA': 0.02e-3, "OLM->PYR_GABA": 72e-3  , "PYR->PYR_NMDA": 0.004e-3,
 }
 
+param_space = { # create parameter space
+    "netParams.connParams.{}.weight".format(k): numpy.linspace(v*args['div'][0], v*args['div'][1], int(args['div'][2])) 
+    for k, v in initial_params.items() if k in args['params']
+}
+
+numpy.linspace
 
 tuner = tune.Tuner(
     objective,
     tune_config=tune.TuneConfig(
         search_alg=algo,
-        num_samples=NTRIALS,
-        metric="loss",
-        mode="min"
+        num_samples=1, # grid search samples 1 for each param
+        metric="loss"
     ),
-    param_space=gaba_space
+    param_space=param_space,
 )
 
 results = tuner.fit()

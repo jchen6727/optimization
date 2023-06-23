@@ -1,4 +1,0 @@
-,netParams.connParams.PYR->BC_AMPA.weight,netParams.connParams.PYR->OLM_AMPA.weight,netParams.connParams.PYR->PYR_AMPA.weight,PYR,BC,OLM
-0,3.6e-05,3.6e-05,2.0000000000000003e-06,36.1,40,39.6
-1,3.6e-05,3.6e-05,3.0285714285714288e-05,37.3,40,39.8
-2,3.6e-05,3.6e-05,5.8571428571428575e-05,38.5,40,39.8
