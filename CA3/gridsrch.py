@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--concurrency', default=1)
 parser.add_argument('-d', '-div', nargs=3, type=float, default=[0.5, 1.5, 3])
 parser.add_argument('-s', '--save', '-o', '--output', default="output/grid")
-parser.add_argument('-t', '--params', nargs='+', default=['PYR->BC_AMPA', 'PYR->OLM_AMPA', 'PYR->PYR_AMPA'])
+parser.add_argument('-p', '--params', nargs='+', default=['PYR->BC_AMPA', 'PYR->OLM_AMPA', 'PYR->PYR_AMPA'])
 
 args, call= parser.parse_known_args()
 args= dict(args._get_kwargs())
@@ -62,7 +62,8 @@ param_space = { # create parameter space
     for k, v in initial_params.items() if k in args['params']
 }
 
-numpy.linspace
+print("=====grid search=====")
+print(param_space)
 
 tuner = tune.Tuner(
     objective,
