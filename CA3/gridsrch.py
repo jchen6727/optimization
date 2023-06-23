@@ -25,7 +25,7 @@ kwargs = {
 }
 
 # singlecore command string
-CMDSTR = "{python} {script}".format(**kwargs)
+#CMDSTR = "{python} {script}".format(**kwargs)
 
 # multicore command string
 CMDSTR = "{mpiexec} -n {cores} {nrniv} -python -mpi -nobanner -nogui {script}".format(**kwargs)
@@ -46,31 +46,17 @@ def objective(config):
     report = dict(sdata=sdata, PYR=sdata['PYR'], BC=sdata['BC'], OLM=sdata['OLM'], loss=loss)
     session.report(report)
 
-def dbobjective(config):
-    stdouts, stderr = utils.dbrun(config, CMDSTR)
-    loss = 0
-    session.report(dict(loss=loss, stdouts=stdouts, stderr=stderr))
-
 algo = ConcurrencyLimiter(searcher=OptunaSearch(), max_concurrent= CONCURRENCY, batch= True)
 
-ampa_space={#AMPA search space
-    "netParams.connParams.PYR->BC_AMPA.weight":  tune.uniform(0.36e-4, 0.36e-2),
-    "netParams.connParams.PYR->OLM_AMPA.weight": tune.uniform(0.36e-4, 0.36e-2),
-    "netParams.connParams.PYR->PYR_AMPA.weight": tune.uniform(0.02e-4, 0.02e-2),
-}
-gaba_space={#GABA search space
-    "netParams.connParams.BC->BC_GABA.weight":   tune.uniform(4.5e-4, 4.5e-2),
-    "netParams.connParams.BC->PYR_GABA.weight":  tune.uniform(0.72e-4, 0.72e-2),
-    "netParams.connParams.OLM->PYR_GABA.weight": tune.uniform(72e-4, 72e-2),
-}
-nmda_space={#NMDA search space
-    "netParams.connParams.PYR->BC_NMDA.weight":  tune.uniform(1.38e-4, 1.38e-2),
-    "netParams.connParams.PYR->OLM_NMDA.weight": tune.uniform(0.7e-4, 0.7e-2),
-    "netParams.connParams.PYR->PYR_NMDA.weight": tune.uniform(0.004e-4, 0.004e-2),
+initial_params = { # weights from cfg, AMPA, GABA, NMDA
+    'PYR->BC_AMPA' : 0.36e-3, "BC->BC_GABA"  : 4.5e-3 , "PYR->BC_NMDA" : 1.38e-3 ,
+    'PYR->OLM_AMPA': 0.36e-3, "BC->PYR_GABA" : 0.72e-3, "PYR->OLM_NMDA": 0.7e-3  ,
+    'PYR->PYR_AMPA': 0.02e-3, "OLM->PYR_GABA": 72e-3  , "PYR->PYR_NMDA": 0.004e-3,
 }
 
+
 tuner = tune.Tuner(
-    dbobjective,
+    objective,
     tune_config=tune.TuneConfig(
         search_alg=algo,
         num_samples=NTRIALS,

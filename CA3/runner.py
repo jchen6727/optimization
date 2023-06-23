@@ -1,10 +1,15 @@
 from avatk.runtk.runners import dispatcher, netpyne_runner
 from netpyne import sim
+
 from ca3 import netParams, cfg
 import json
 import os
 
-DLL = '/home/chen5/dev/optimization/CA3/mod/x86_64/libnrnmech.so'
+PATH = os.getcwd()
+
+SO = '/ddn/jchen/dev/optimization/CA3/mod/x86_64/libnrnmech.so'
+MECH = '/ddn/jchen/dev/optimization/CA3/mod'
+#DLL = 'mod/x86_64/libnrnmech.so'
 #define parameter strings
 class nr(netpyne_runner):
     "inherit the process_runner"
@@ -15,7 +20,11 @@ class nr(netpyne_runner):
 if __name__ == "__main__":
     r = nr()
     r.set_mappings()
-    r.sim.h.nrn_load_dll(DLL)
+    try:
+        r.sim.h.hcurrent
+    except:
+        #neuron.load_mechanisms(MECH)
+        r.sim.h.nrn_load_dll(SO)
     #json_out = r.get_mappings()
     #print("DELIM{}".format(json_out))
     r.create()

@@ -40,8 +40,23 @@ CONCURRENCY = int(args['concurrency'])
 NTRIALS = int(args['trials'])
 SAVESTR = "{}_{}_{}.csv".format(args['save'], CONCURRENCY, NTRIALS)
 
-ray.init(runtime_env={"working_dir": "."}) # needed for import statements
+ray.init(
+    runtime_env={"working_dir": ".", # needed for import statements
+                 "excludes": ["*.csv"]}, # limit the files copied
+    #_temp_dir=os.getcwd() + '/ray', # keep logs in same folder (keeping resources in same folder as "working_dir")
+)
+
+"""
+ray.init(
+#    num_cpus=CONCURRENCY,
+    _temp_dir=os.getcwd() + '/logs',
+#    object_store_memory=32e9
+#    _system_config={'worker_register_timeout_seconds':60} #TODO doesn't seem to change anything
+)
+"""
+
 #ray.init(runtime_env={"py_modules": [os.getcwd()]})
+
 TARGET = pandas.Series(
     {'PYR': 2.35,
      'BC': 14.3,
@@ -112,7 +127,7 @@ nmda_space={#NMDA search space
 }
 
 tuner = tune.Tuner(
-    objective,
+    dbobjective,
     tune_config=tune.TuneConfig(
         search_alg=algo,
         num_samples=NTRIALS,
