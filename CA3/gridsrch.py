@@ -7,15 +7,15 @@ import os
 import numpy
 from ray import tune
 from ray.air import session
-from ray.tune.search.optuna import OptunaSearch
-from ray.tune.search import ConcurrencyLimiter
+#from ray.tune.search.optuna import OptunaSearch
+from ray.tune.search.basic_variant import BasicVariantGenerator
 
 import argparse
 
 ## specify CLI to function
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--concurrency', default=1)
-parser.add_argument('-d', '-div', nargs=3, type=float, default=[0.5, 1.5, 3])
+parser.add_argument('-d', '--div', nargs=3, type=float, default=[0.5, 1.5, 3])
 parser.add_argument('-s', '--save', '-o', '--output', default="output/grid")
 parser.add_argument('-p', '--params', nargs='+', default=['PYR->BC_AMPA', 'PYR->OLM_AMPA', 'PYR->PYR_AMPA'])
 
@@ -33,10 +33,15 @@ kwargs = {
 # multicore command string
 CMDSTR = "{mpiexec} -n {cores} {nrniv} -python -mpi -nobanner -nogui {script}".format(**kwargs)
 CONCURRENCY = int(args['concurrency'])
-NTRIALS = int(args['trials'])
-SAVESTR = "{}_{}.csv".format(args['save'], CONCURRENCY, NTRIALS)
+#NTRIALS = int(args['trials'])
+SAVESTR = "{}.csv".format(args['save'])
 
-ray.init(runtime_env={"working_dir": "."}) # needed for import statements
+ray.init(
+    runtime_env={"working_dir": ".", # needed for import statements
+                 "excludes": ["*.csv"]}, # limit the files copied
+    #_temp_dir=os.getcwd() + '/ray', # keep logs in same folder (keeping resources in same folder as "working_dir")
+)
+
 #ray.init(runtime_env={"py_modules": [os.getcwd()]})
 TARGET = pandas.Series(
     {'PYR': 2.35,
@@ -49,7 +54,7 @@ def objective(config):
     report = dict(sdata=sdata, PYR=sdata['PYR'], BC=sdata['BC'], OLM=sdata['OLM'], loss=loss)
     session.report(report)
 
-algo = ConcurrencyLimiter(searcher=OptunaSearch(), max_concurrent= CONCURRENCY, batch= True)
+algo = BasicVariantGenerator(max_concurrent=CONCURRENCY)
 
 initial_params = { # weights from cfg, AMPA, GABA, NMDA
     'PYR->BC_AMPA' : 0.36e-3, "BC->BC_GABA"  : 4.5e-3 , "PYR->BC_NMDA" : 1.38e-3 ,
@@ -62,6 +67,10 @@ param_space = { # create parameter space
     for k, v in initial_params.items() if k in args['params']
 }
 
+param_grid = {
+    k: tune.grid_search(v) for k, v in param_space.items()
+}
+
 print("=====grid search=====")
 print(param_space)
 
@@ -72,7 +81,7 @@ tuner = tune.Tuner(
         num_samples=1, # grid search samples 1 for each param
         metric="loss"
     ),
-    param_space=param_space,
+    param_space=param_grid,
 )
 
 results = tuner.fit()

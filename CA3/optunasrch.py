@@ -33,7 +33,11 @@ CONCURRENCY = int(args['concurrency'])
 NTRIALS = int(args['trials'])
 SAVESTR = "{}_{}_{}.csv".format(args['save'], CONCURRENCY, NTRIALS)
 
-ray.init(runtime_env={"working_dir": "."}) # needed for import statements
+ray.init(
+    runtime_env={"working_dir": ".", # needed for import statements
+                 "excludes": ["*.csv"]}, # limit the files copied
+    #_temp_dir=os.getcwd() + '/ray', # keep logs in same folder (keeping resources in same folder as "working_dir")
+)
 #ray.init(runtime_env={"py_modules": [os.getcwd()]})
 TARGET = pandas.Series(
     {'PYR': 2.35,
