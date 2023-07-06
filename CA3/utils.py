@@ -34,7 +34,16 @@ def run(config, cmdstr):
     data = stdouts.split("===FREQUENCIES===\n")[-1]
     sdata = pandas.Series(json.loads(data)).astype(float)
     return sdata
-    
+
+def sge_run(config, cmdstr):
+    # run a single process on the grid engine
+    netm_env = {"NETM{}".format(i):
+                    "{}={}".format(key, config[key]) for i, key in enumerate(config.keys())}
+    runner = dispatcher(cmdstr= cmdstr, env= netm_env)
+    stdouts, stderr = runner.run()
+    data = stdouts.split("===FREQUENCIES===\n")[-1]
+    sdata = pandas.Series(json.loads(data)).astype(float)
+    return sdata
 def dbrun(config, cmdstr): 
     # debug optimization run 
     netm_env = {"NETM{}".format(i):
