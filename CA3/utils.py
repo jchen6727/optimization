@@ -3,8 +3,8 @@ import numpy
 import json
 import os
 
-
-from avatk.runtk.runners import dispatcher
+from pubtk.runtk.runners import dispatcher
+#from avatk.runtk.runners import dispatcher
 
 target = pandas.Series(
     {'PYR': 2.35,
@@ -35,8 +35,8 @@ def run(config, cmdstr):
     sdata = pandas.Series(json.loads(data)).astype(float)
     return sdata
 
-def sge_run(config, cmdstr):
-    # run a single process on the grid engine
+def sge_run(config, cmdstr, wait_interval= None):
+    # run on sge
     netm_env = {"NETM{}".format(i):
                     "{}={}".format(key, config[key]) for i, key in enumerate(config.keys())}
     runner = dispatcher(cmdstr= cmdstr, env= netm_env)
@@ -44,6 +44,7 @@ def sge_run(config, cmdstr):
     data = stdouts.split("===FREQUENCIES===\n")[-1]
     sdata = pandas.Series(json.loads(data)).astype(float)
     return sdata
+
 def dbrun(config, cmdstr): 
     # debug optimization run 
     netm_env = {"NETM{}".format(i):
