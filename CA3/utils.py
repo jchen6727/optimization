@@ -35,8 +35,10 @@ def run(config, cmdstr):
     sdata = pandas.Series(json.loads(data)).astype(float)
     return sdata
 
-def sge_run(config, cmdstr, wait_interval= None):
+def sge_run(config, cmdstr, cores, wait_interval= None):
     # run on sge
+    # 
+    filename = "sge_{}.sh".format(config['ID'])
     netm_env = {"NETM{}".format(i):
                     "{}={}".format(key, config[key]) for i, key in enumerate(config.keys())}
     runner = dispatcher(cmdstr= cmdstr, env= netm_env)
