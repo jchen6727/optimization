@@ -4,6 +4,7 @@ import pandas
 import shutil
 import os
 
+import uuid
 from ray import tune
 from ray.air import session
 from ray.tune.search.optuna import OptunaSearch

@@ -1,4 +1,4 @@
-from avatk.runtk.runners import dispatcher
+from pubtk.runtk.runners import Dispatcher
 import ray
 import pandas
 import json
@@ -74,7 +74,7 @@ def dbrun(config):
     netm_env = {"NETM{}".format(i):
                     "{}={}".format(key, config[key]) for i, key in enumerate(config.keys())}
     cmdstr = CMDSTR
-    runner = dispatcher(cmdstr= cmdstr, env= netm_env)
+    runner = Dispatcher(cmdstr= cmdstr, env= netm_env)
     stdouts, stderr = runner.run()
     return stdouts, stderr
 

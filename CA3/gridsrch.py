@@ -17,21 +17,27 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--concurrency', default=1)
 parser.add_argument('-d', '--div', nargs=3, type=float, default=[0.5, 1.5, 3])
 parser.add_argument('-s', '--save', '-o', '--output', default="output/grid")
-parser.add_argument('-p', '--params', nargs='+', default=['PYR->BC_AMPA', 'PYR->OLM_AMPA', 'PYR->PYR_AMPA'])
+#parser.add_argument('-p', '--params', nargs='+', default=['PYR->BC_AMPA', 'PYR->OLM_AMPA', 'PYR->PYR_AMPA'])
+parser.add_argument('-p', '--params', nargs='+', default=['PYR->BC_AMPA'])
 
 args, call= parser.parse_known_args()
 args= dict(args._get_kwargs())
 
+cwd = os.getcwd()
 kwargs = {
     'mpiexec': shutil.which('mpiexec'), 'cores': 4, 'nrniv': shutil.which('nrniv'),
-    'python': shutil.which('python'), 'script': os.getcwd() + '/runner.py'
+    'python': shutil.which('python'), 'script': cwd + '/runner.py'
 }
 
 # singlecore command string
-#CMDSTR = "{python} {script}".format(**kwargs)
+PY_CMDSTR = "{python} {script}".format(**kwargs)
 
-# multicore command string
-CMDSTR = "{mpiexec} -n {cores} {nrniv} -python -mpi -nobanner -nogui {script}".format(**kwargs)
+# multicore command strings (mpiexec and shell)
+MPI_CMDSTR = "{mpiexec} -n {cores} {nrniv} -python -mpi -nobanner -nogui {script}".format(**kwargs)
+#SH_CMDSTR = "{mpiexec} -n $NSLOTS {nrniv} -python -mpi -nobanner -nogui {script}".format(**kwargs)
+SH_CMDSTR = "time mpiexec -hosts $(hostname) -n $NSLOTS nrniv -python -mpi -nobanner -nogui runner.py".format(**kwargs)
+
+
 CONCURRENCY = int(args['concurrency'])
 #NTRIALS = int(args['trials'])
 SAVESTR = "{}.csv".format(args['save'])
@@ -49,10 +55,16 @@ TARGET = pandas.Series(
      'OLM': 4.83})
 
 def objective(config):
-    sdata = utils.run(config, CMDSTR)
+    sdata = utils.run(config, MPI_CMDSTR)
     loss = utils.mse(sdata, TARGET)
     report = dict(sdata=sdata, PYR=sdata['PYR'], BC=sdata['BC'], OLM=sdata['OLM'], loss=loss)
     session.report(report)
+
+def sge_objective(config):
+    data, stdout, stderr = utils.sge_run(config=config, cwd=cwd, cmdstr=SH_CMDSTR, cores=5)
+    sdata = pandas.read_json(data, typ='series', dtype=float)
+    loss = utils.mse(sdata, TARGET)
+    session.report(dict(loss=loss, data=sdata, stdout=stdout, stderr=stderr))
 
 algo = BasicVariantGenerator(max_concurrent=CONCURRENCY)
 
@@ -75,7 +87,7 @@ print("=====grid search=====")
 print(param_space)
 
 tuner = tune.Tuner(
-    objective,
+    sge_objective,
     tune_config=tune.TuneConfig(
         search_alg=algo,
         num_samples=1, # grid search samples 1 for each param

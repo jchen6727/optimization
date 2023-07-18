@@ -2,9 +2,15 @@ import pandas
 import numpy
 import json
 import os
+import time
+import hashlib
 
-from pubtk.runtk.runners import dispatcher
+from pubtk.runtk.runners import Dispatcher
+from pubtk.runtk.template import sge_template
+
 #from avatk.runtk.runners import dispatcher
+#TODO update to asyncio
+
 
 target = pandas.Series(
     {'PYR': 2.35,
@@ -29,37 +35,48 @@ def agg_csv(files, target=None):
 def run(config, cmdstr):
     netm_env = {"NETM{}".format(i):
                     "{}={}".format(key, config[key]) for i, key in enumerate(config.keys())}
-    runner = dispatcher(cmdstr= cmdstr, env= netm_env)
-    stdouts, stderr = runner.run()
-    data = stdouts.split("===FREQUENCIES===\n")[-1]
+    runner = Dispatcher(cmdstr= cmdstr, env= netm_env)
+    stdout, stderr = runner.run()
+    data = stdout.split("===FREQUENCIES===\n")[-1]
     sdata = pandas.Series(json.loads(data)).astype(float)
     return sdata
 
-def sge_run(config, cmdstr, cores, wait_interval= None):
+def sge_run(config, cmdstr, cwd, cores, wait_interval= 5):
     # run on sge
-    # 
-    filename = "sge_{}.sh".format(config['ID'])
+    # create shell script, submit shell script, watch  for output file, return output when complete.
     netm_env = {"NETM{}".format(i):
                     "{}={}".format(key, config[key]) for i, key in enumerate(config.keys())}
-    runner = dispatcher(cmdstr= cmdstr, env= netm_env)
-    stdouts, stderr = runner.run()
-    data = stdouts.split("===FREQUENCIES===\n")[-1]
-    sdata = pandas.Series(json.loads(data)).astype(float)
-    return sdata
+    runner = Dispatcher(cmdstr=cmdstr, cwd=cwd, env= netm_env)
+    stdouts, stderr = runner.shrun(sh="qsub", 
+                                   template=sge_template,
+                                   name="ca3",
+                                   cores=cores, #NOT THE SAME AS $NSLOTS (which reserves 1 less per SGE)
+                                   vmem="32G",
+                                   pre="",
+                                   post=""
+                                   )
+    # wait for sig
+    # TODO implement asyncio instead
+    data = runner.check_shrun()
+    while not data:
+        time.sleep(wait_interval)
+        data = runner.check_shrun()
+    #sdata = pandas.Series(json.loads(data)).astype(float)
+    return data, stdouts, stderr
 
 def dbrun(config, cmdstr): 
     # debug optimization run 
     netm_env = {"NETM{}".format(i):
                     "{}={}".format(key, config[key]) for i, key in enumerate(config.keys())}
-    runner = dispatcher(cmdstr= cmdstr, env= netm_env)
-    stdouts, stderr = runner.run()
-    return stdouts, stderr
+    runner = Dispatcher(cmdstr= cmdstr, env= netm_env)
+    stdout, stderr = runner.run()
+    return stdout, stderr
 
 def dbobjective(config, cmdstr):
     # debug objective of a remote process
-    stdouts, stderr = dbrun(config, cmdstr)
+    stdout, stderr = dbrun(config, cmdstr)
     loss = 0
-    return dict(loss=loss, stdouts=stdouts, stderr=stderr)
+    return dict(loss=loss, stdout=stdout, stderr=stderr)
 
 
 def write_csv(dataframe: pandas.DataFrame, savestring: str):
