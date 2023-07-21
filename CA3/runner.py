@@ -1,4 +1,5 @@
-from pubtk.runtk.runners import NetpyneRunner
+from pubtk.runtk import NetpyneRunner
+#from pubtk.runtk.runners import NetpyneRunner
 from netpyne import sim
 
 from ca3 import netParams, cfg

@@ -5,10 +5,12 @@ import os
 import time
 import hashlib
 
-from pubtk.runtk.runners import Dispatcher
+from pubtk.runtk import Dispatcher, SFS_Dispatcher
 from pubtk.runtk.template import sge_template
 
 #from avatk.runtk.runners import dispatcher
+#TODO update to asyncio
+
 #TODO update to asyncio
 
 
@@ -38,16 +40,20 @@ def run(config, cmdstr):
     runner = Dispatcher(cmdstr= cmdstr, env= netm_env)
     stdout, stderr = runner.run()
     data = stdout.split("===FREQUENCIES===\n")[-1]
+    runner = Dispatcher(cmdstr= cmdstr, env= netm_env)
+    stdout, stderr = runner.run()
+    data = stdout.split("===FREQUENCIES===\n")[-1]
     sdata = pandas.Series(json.loads(data)).astype(float)
     return sdata
 
 def sge_run(config, cmdstr, cwd, cores, wait_interval= 5):
     # run on sge
     # create shell script, submit shell script, watch  for output file, return output when complete.
+    # create shell script, submit shell script, watch  for output file, return output when complete.
     netm_env = {"NETM{}".format(i):
                     "{}={}".format(key, config[key]) for i, key in enumerate(config.keys())}
-    runner = Dispatcher(cmdstr=cmdstr, cwd=cwd, env= netm_env)
-    stdouts, stderr = runner.shrun(sh="qsub", 
+    dispatcher = SFS_Dispatcher(cmdstr=cmdstr, cwd=cwd, env= netm_env)
+    stdouts, stderr = dispatcher.shrun(sh="qsub", 
                                    template=sge_template,
                                    name="ca3",
                                    cores=cores, #NOT THE SAME AS $NSLOTS (which reserves 1 less per SGE)
@@ -57,11 +63,12 @@ def sge_run(config, cmdstr, cwd, cores, wait_interval= 5):
                                    )
     # wait for sig
     # TODO implement asyncio instead
-    data = runner.check_shrun()
+    data = dispatcher.get_shrun()
     while not data:
         time.sleep(wait_interval)
-        data = runner.check_shrun()
+        data = dispatcher.get_shrun()
     #sdata = pandas.Series(json.loads(data)).astype(float)
+    dispatcher.clean(args='rw')
     return data, stdouts, stderr
 
 def dbrun(config, cmdstr): 
@@ -71,11 +78,16 @@ def dbrun(config, cmdstr):
     runner = Dispatcher(cmdstr= cmdstr, env= netm_env)
     stdout, stderr = runner.run()
     return stdout, stderr
+    runner = Dispatcher(cmdstr= cmdstr, env= netm_env)
+    stdout, stderr = runner.run()
+    return stdout, stderr
 
 def dbobjective(config, cmdstr):
     # debug objective of a remote process
     stdout, stderr = dbrun(config, cmdstr)
+    stdout, stderr = dbrun(config, cmdstr)
     loss = 0
+    return dict(loss=loss, stdout=stdout, stderr=stderr)
     return dict(loss=loss, stdout=stdout, stderr=stderr)
 
 
