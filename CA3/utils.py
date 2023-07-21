@@ -11,9 +11,6 @@ from pubtk.runtk.template import sge_template
 #from avatk.runtk.runners import dispatcher
 #TODO update to asyncio
 
-#TODO update to asyncio
-
-
 target = pandas.Series(
     {'PYR': 2.35,
      'BC': 14.3,
@@ -49,7 +46,6 @@ def run(config, cmdstr):
 def sge_run(config, cmdstr, cwd, cores, wait_interval= 5):
     # run on sge
     # create shell script, submit shell script, watch  for output file, return output when complete.
-    # create shell script, submit shell script, watch  for output file, return output when complete.
     netm_env = {"NETM{}".format(i):
                     "{}={}".format(key, config[key]) for i, key in enumerate(config.keys())}
     dispatcher = SFS_Dispatcher(cmdstr=cmdstr, cwd=cwd, env= netm_env)
@@ -78,9 +74,6 @@ def dbrun(config, cmdstr):
     runner = Dispatcher(cmdstr= cmdstr, env= netm_env)
     stdout, stderr = runner.run()
     return stdout, stderr
-    runner = Dispatcher(cmdstr= cmdstr, env= netm_env)
-    stdout, stderr = runner.run()
-    return stdout, stderr
 
 def dbobjective(config, cmdstr):
     # debug objective of a remote process
@@ -88,8 +81,6 @@ def dbobjective(config, cmdstr):
     stdout, stderr = dbrun(config, cmdstr)
     loss = 0
     return dict(loss=loss, stdout=stdout, stderr=stderr)
-    return dict(loss=loss, stdout=stdout, stderr=stderr)
-
 
 def write_csv(dataframe: pandas.DataFrame, savestring: str):
     if '/' in savestring:

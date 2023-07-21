@@ -46,4 +46,5 @@ if __name__ == "__main__":
         if r.writefile:
             print("")
             r.write(out_json)
+            r.signal()
 
