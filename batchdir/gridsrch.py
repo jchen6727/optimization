@@ -87,7 +87,7 @@ algo = BasicVariantGenerator(max_concurrent=CONCURRENCY)
 
 param_space = { # create parameter space
     "netParams.connParams.{}.weight".format(k): numpy.linspace(v*args['div'][0], v*args['div'][1], int(args['div'][2])) 
-    for k, v in initial_params.items() if param_keys
+    for k, v in initial_params.items() if k in param_keys
 }
 
 """
