@@ -5,8 +5,8 @@ from netpyne import sim
 from ca3 import netParams, cfg
 import json
 
-SO = '/ddn/jchen/dev/optimization/CA3/mod/x86_64/libnrnmech.so'
-MECH = '/ddn/jchen/dev/optimization/CA3/mod'
+SO = '/ddn/jchen/dev/optimization/batchdir/mod/x86_64/libnrnmech.so'
+MECH = '/ddn/jchen/dev/optimization/batchdir/mod'
 #DLL = 'mod/x86_64/libnrnmech.so'
 #define parameter strings
 class NR(NetpyneRunner):

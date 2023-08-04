@@ -6,17 +6,19 @@ import os
 
 import numpy
 from ray import tune
+from ray import air
 from ray.air import session
-#from ray.tune.search.optuna import OptunaSearch
-from ray.tune.search.basic_variant import BasicVariantGenerator
+from ray.tune.search.bayesopt import BayesOptSearch
+from ray.tune.search import ConcurrencyLimiter
 
 import argparse
 
 ## specify CLI to function
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--concurrency', default=1)
-parser.add_argument('-d', '--div', nargs=3, type=float, default=[0.5, 1.5, 3])
-parser.add_argument('-s', '--save', '-o', '--output', default="output/grid")
+parser.add_argument('-d', '--div', nargs=3, type=float, default=[0.5, 1.5, 100])
+parser.add_argument('-s', '--save', '-o', '--output', default="output/optuna")
+parser.add_argument('-t', '--trials', default=100)
 #parser.add_argument('-p', '--params', nargs='+', default=['PYR->BC_AMPA', 'PYR->OLM_AMPA', 'PYR->PYR_AMPA'])
 parser.add_argument('-p', '--params', nargs='+', default=['Z'*80])
 parser.add_argument('-g', '--greps', nargs='+', default=['Z'*80])
@@ -25,7 +27,7 @@ args, call= parser.parse_known_args()
 args= dict(args._get_kwargs())
 
 cwd = os.getcwd()
-kwargs = {
+cmd_args = {
     'mpiexec': shutil.which('mpiexec'), 'cores': 4, 'nrniv': shutil.which('nrniv'),
     'python': shutil.which('python'), 'script': cwd + '/runner.py'
 }
@@ -47,22 +49,22 @@ param_keys.update(args['params'])
 
 
 # singlecore command string
-PY_CMDSTR = "{python} {script}".format(**kwargs)
+PY_CMDSTR = "{python} {script}".format(**cmd_args)
 
 # multicore command strings (mpiexec and shell)
-MPI_CMDSTR = "{mpiexec} -n {cores} {nrniv} -python -mpi -nobanner -nogui {script}".format(**kwargs)
-#SH_CMDSTR = "{mpiexec} -n $NSLOTS {nrniv} -python -mpi -nobanner -nogui {script}".format(**kwargs)
-SH_CMDSTR = "time mpiexec -hosts $(hostname) -n $NSLOTS nrniv -python -mpi -nobanner -nogui runner.py".format(**kwargs)
-
+MPI_CMDSTR = "{mpiexec} -n {cores} {nrniv} -python -mpi -nobanner -nogui {script}".format(**cmd_args)
+SH_CMDSTR = "time mpiexec -hosts $(hostname) -n $NSLOTS nrniv -python -mpi -nobanner -nogui runner.py".format(**cmd_args)
 
 CONCURRENCY = int(args['concurrency'])
-#NTRIALS = int(args['trials'])
+NTRIALS = int(args['trials'])
 SAVESTR = "{}.csv".format(args['save'])
 
 ray.init(
     runtime_env={"working_dir": ".", # needed for import statements
-                 "excludes": ["*.csv"]}, # limit the files copied
-    #_temp_dir=os.getcwd() + '/ray', # keep logs in same folder (keeping resources in same folder as "working_dir")
+                 "excludes": ["*.csv", 
+                              "ray/",
+                              "output/"]}, # limit the files copied
+    _temp_dir=os.getcwd() + '/ray/tmp', # keep logs in same folder (keeping resources in same folder as "working_dir")
 )
 
 #ray.init(runtime_env={"py_modules": [os.getcwd()]})
@@ -78,44 +80,51 @@ def objective(config):
     session.report(report)
 
 def sge_objective(config):
-    data, stdout, stderr = utils.sge_run(config=config, cwd=cwd, cmdstr=SH_CMDSTR, cores=5)
+    data = utils.sge_run(config=config, cwd=cwd, cmdstr=SH_CMDSTR, cores=5)
     sdata = pandas.read_json(data, typ='series', dtype=float)
     loss = utils.mse(sdata, TARGET)
     session.report(dict(loss=loss, data=sdata, stdout=stdout, stderr=stderr))
 
-algo = BasicVariantGenerator(max_concurrent=CONCURRENCY)
+bopt_algo = ConcurrencyLimiter(searcher=BayesOptSearch(), max_concurrent=CONCURRENCY, batch= True)
+#optuna_algo = ConcurrencyLimiter(searcher=OptunaSearch(), max_concurrent=CONCURRENCY, batch= True)
+#bvg_algo = BasicVariantGenerator(max_concurrent=CONCURRENCY)
 
-param_space = { # create parameter space
+param_linspace = { # create parameter linspace
     "netParams.connParams.{}.weight".format(k): numpy.linspace(v*args['div'][0], v*args['div'][1], int(args['div'][2])) 
     for k, v in initial_params.items() if k in param_keys
 }
 
-"""
-param_space = { # create parameter space
-    "netParams.connParams.{}.weight".format(k): numpy.linspace(v*args['div'][0], v*args['div'][1], int(args['div'][2])) 
-    for k, v in initial_params.items() if k in args['params']
+# quantized step
+qstep = (args['div'][1] - args['div'][0]) / args['div'][2]
+param_qunspace = { # create parameter quniform space
+    "netParams.connParams.{}.weight".format(k): tune.quniform(v*args['div'][0], v*args['div'][1], v*qstep) 
+    for k, v in initial_params.items() if k in param_keys
 }
-"""
+
 param_grid = {
-    k: tune.grid_search(v) for k, v in param_space.items()
+    k: tune.grid_search(v) for k, v in param_linspace.items()
 }
 
-print("=====grid search=====")
-print(param_space)
+print("=====bopt search=====")
+print(param_qunspace)
 
-utils.write_pkl(param_space, "{}.pkl".format(args['save']))
-
-tuner = tune.Tuner(
+bopt_tuner = tune.Tuner(
     objective, #or sge_objective
     tune_config=tune.TuneConfig(
-        search_alg=algo,
-        num_samples=1, # grid search samples 1 for each param
-        metric="loss"
+        search_alg=bopt_algo,
+        metric="loss",
+        mode="min",
+        num_samples=NTRIALS,
     ),
-    param_space=param_grid,
+    run_config=air.RunConfig(
+        local_dir="./ray/session",
+        name="bopt",
+    ),
+    param_space=param_qunspace,
+
 )
 
-results = tuner.fit()
+results = bopt_tuner.fit()
 
 resultsdf = results.get_dataframe()
 

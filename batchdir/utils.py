@@ -4,6 +4,7 @@ import json
 import os
 import time
 import hashlib
+import pickle
 
 from pubtk.runtk import Dispatcher, SFS_Dispatcher
 from pubtk.runtk.template import sge_template
@@ -49,7 +50,7 @@ def sge_run(config, cmdstr, cwd, cores, wait_interval= 5):
     stdouts, stderr = dispatcher.shrun(sh="qsub", 
                                    template=sge_template,
                                    name="ca3",
-                                   cores=cores, #NOT THE SAME AS $NSLOTS (which reserves 1 less per SGE)
+                                   cores=cores, #not the same as numprocs (which reserves 1 less per SGE), this is -pe smp
                                    vmem="32G",
                                    pre="",
                                    post=""
@@ -62,7 +63,7 @@ def sge_run(config, cmdstr, cwd, cores, wait_interval= 5):
         data = dispatcher.get_shrun()
     #sdata = pandas.Series(json.loads(data)).astype(float)
     dispatcher.clean(args='rw')
-    return data, stdouts, stderr
+    return data #, stdouts, stderr
 
 def dbrun(config, cmdstr): 
     # debug optimization run 
@@ -75,11 +76,22 @@ def dbrun(config, cmdstr):
 def dbobjective(config, cmdstr):
     # debug objective of a remote process
     stdout, stderr = dbrun(config, cmdstr)
-    stdout, stderr = dbrun(config, cmdstr)
     loss = 0
     return dict(loss=loss, stdout=stdout, stderr=stderr)
 
-def write_csv(dataframe: pandas.DataFrame, savestring: str):
-    if '/' in savestring:
-        os.makedirs(savestring.rsplit('/', 1)[0], exist_ok=True)
-    dataframe.to_csv(savestring)
+def write_csv(dataframe: pandas.DataFrame, write_path: str):
+    if '/' in write_path:
+        os.makedirs(write_path.rsplit('/', 1)[0], exist_ok=True)
+    dataframe.to_csv(write_path)
+
+def write_pkl(wobject: object, write_path: str):
+    if '/' in write_path:
+        os.makedirs(write_path.rsplit('/', 1)[0], exist_ok=True)
+    fptr = open(write_path, 'wb')
+    pickle.dump(wobject, fptr)
+    fptr.close()
+
+def read_pkl(read_path: str):
+    fptr = open(read_path, 'rb')
+    robject = pickle.load(fptr)
+    return robject
