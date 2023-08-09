@@ -95,3 +95,12 @@ def read_pkl(read_path: str):
     fptr = open(read_path, 'rb')
     robject = pickle.load(fptr)
     return robject
+
+def get_freq(self: object):
+    freq_data = {}
+    data = self.sim.analysis.prepareSpikeData()['legendLabels']
+    for datm in data:
+        pop = datm.split('\n')[0]
+        freq = datm.split(' ')[-2]
+        freq_data[pop] = freq
+    return freq_data

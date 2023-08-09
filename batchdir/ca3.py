@@ -2,6 +2,8 @@ from netpyne import specs
 
 ### config ###
 
+from pubtk.runtk import NetpyneRunner
+
 cfg = specs.SimConfig()
 
 cfg.duration = 1000
