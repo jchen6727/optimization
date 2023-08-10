@@ -3,8 +3,10 @@ from netpyne import specs
 ### config ###
 
 from pubtk.runtk import NetpyneRunner
-
-cfg = specs.SimConfig()
+ca3 = NetpyneRunner()
+cfg = ca3.cfg
+netParams = ca3.netParams
+#cfg = specs.SimConfig()
 
 cfg.duration = 1000
 cfg.dt = 0.1
@@ -27,10 +29,14 @@ cfg.cache_efficient = True # better with MPI?
 """ remove all of the unecessary data """
 cfg.saveCellSecs = False
 cfg.saveCellConns = False
+cfg.flag = False
+
+ca3.set_mappings('cfg')
+
 
 ### params ###
 # Network parameters
-netParams = specs.NetParams()  # object of class NetParams to store the network parameters
+#netParams = specs.NetParams()  # object of class NetParams to store the network parameters
 netParams.defaultThreshold = 0.0
 netParams.defineCellShapes = True       # sets 3d geometry aligned along the y-axis 
 
@@ -345,3 +351,5 @@ netParams.stimTargetParams['Septal->OLM'] = {
         'weight': 1.6e-3,
         'delay': 2*0.1,
         'synMech': 'GABAss'}
+
+ca3.set_mappings('netParams ')

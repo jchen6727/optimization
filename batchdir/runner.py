@@ -2,6 +2,7 @@ from pubtk.runtk import NetpyneRunner
 #from pubtk.runtk.runners import NetpyneRunner
 from netpyne import sim
 
+from utils import get_freq
 from ca3 import netParams, cfg
 import json
 
