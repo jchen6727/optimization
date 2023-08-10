@@ -10,6 +10,7 @@ SO = '/ddn/jchen/dev/optimization/batchdir/mod/x86_64/libnrnmech.so'
 MECH = '/ddn/jchen/dev/optimization/batchdir/mod'
 #DLL = 'mod/x86_64/libnrnmech.so'
 #define parameter strings
+"""
 class NR(NetpyneRunner):
     "inherit the process_runner"
     sim = sim
@@ -24,9 +25,9 @@ class NR(NetpyneRunner):
             freq = datm.split(' ')[-2]
             freq_data[pop] = freq
         return freq_data
-
+"""
 if __name__ == "__main__":
-    r = NR()
+    r = NetpyneRunner(netParams, cfg, sim)
     r.set_mappings()
     try:
         r.sim.h.hcurrent

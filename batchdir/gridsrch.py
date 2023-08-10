@@ -6,6 +6,7 @@ import os
 
 import numpy
 from ray import tune
+from ray import air
 from ray.air import session
 #from ray.tune.search.optuna import OptunaSearch
 from ray.tune.search.basic_variant import BasicVariantGenerator
@@ -61,9 +62,13 @@ SAVESTR = "{}.csv".format(args['save'])
 
 ray.init(
     runtime_env={"working_dir": ".", # needed for import statements
-                 "excludes": ["*.csv"]}, # limit the files copied
-    #_temp_dir=os.getcwd() + '/ray', # keep logs in same folder (keeping resources in same folder as "working_dir")
+                 "excludes": ["*.csv", 
+                              "ray/",
+                              "output/"]}, # limit the files copied
+    # _temp_dir=os.getcwd() + '/ray/tmp', # keep logs in same folder (keeping resources in same folder as "working_dir")
+    # OSError: AF_UNIX path length cannot exceed 107 bytes
 )
+
 
 #ray.init(runtime_env={"py_modules": [os.getcwd()]})
 TARGET = pandas.Series(
@@ -106,11 +111,16 @@ print(param_space)
 utils.write_pkl(param_space, "{}.pkl".format(args['save']))
 
 tuner = tune.Tuner(
-    objective, #or sge_objective
+    #objective,
+    sge_objective,
     tune_config=tune.TuneConfig(
         search_alg=algo,
         num_samples=1, # grid search samples 1 for each param
         metric="loss"
+    ),
+    run_config=air.RunConfig(
+        local_dir="./ray_ses",
+        name="grid",
     ),
     param_space=param_grid,
 )

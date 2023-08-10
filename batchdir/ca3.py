@@ -352,4 +352,4 @@ netParams.stimTargetParams['Septal->OLM'] = {
         'delay': 2*0.1,
         'synMech': 'GABAss'}
 
-ca3.set_mappings('netParams ')
+ca3.set_mappings('netParams')
