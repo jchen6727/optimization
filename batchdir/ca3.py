@@ -4,8 +4,8 @@ from netpyne import specs
 
 from pubtk.runtk import NetpyneRunner
 ca3 = NetpyneRunner()
-cfg = ca3.cfg
-netParams = ca3.netParams
+cfg = ca3.get_cfg()
+netParams = ca3.get_netParams()
 #cfg = specs.SimConfig()
 
 cfg.duration = 1000

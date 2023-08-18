@@ -3,7 +3,7 @@ from pubtk.runtk import NetpyneRunner
 from netpyne import sim
 
 from utils import get_freq
-from ca3 import netParams, cfg
+from ca3 import ca3
 import json
 
 SO = '/ddn/jchen/dev/optimization/batchdir/mod/x86_64/libnrnmech.so'
@@ -27,26 +27,24 @@ class NR(NetpyneRunner):
         return freq_data
 """
 if __name__ == "__main__":
-    r = NetpyneRunner(netParams, cfg, sim)
-    r.set_mappings()
     try:
-        r.sim.h.hcurrent
+        sim.h.hcurrent
     except:
         #neuron.load_mechanisms(MECH)
-        r.sim.h.nrn_load_dll(SO)
+        sim.h.nrn_load_dll(SO)
     #json_out = r.get_mappings()
     #print("DELIM{}".format(json_out))
-    r.create()
-    r.simulate()
-    r.sim.pc.barrier()
-    if r.sim.rank == 0: # data out (print, and then file I/O if writefile specified)
-        inputs = r.get_mappings()
-        spikes = r.get_freq()
+    sim.create(ca3.netParams, ca3.cfg)
+    sim.simulate()
+    sim.pc.barrier()
+    if sim.rank == 0: # data out (print, and then file I/O if writefile specified)
+        inputs = ca3.get_mappings()
+        spikes = get_freq(sim.analysis.prepareSpikeData()['legendLabels'])
         out_json = json.dumps({**inputs, **spikes})
         print("===FREQUENCIES===\n")
         print(out_json)
-        if r.writefile:
-            print("")
-            r.write(out_json)
-            r.signal()
+        if ca3.writefile:
+            print("writing to {}".format(ca3.writefile))
+            ca3.write(out_json)
+            ca3.signal()
 

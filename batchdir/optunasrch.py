@@ -65,7 +65,7 @@ ray.init(
                  "excludes": ["*.csv", 
                               "ray/",
                               "output/"]}, # limit the files copied
-    _temp_dir=os.getcwd() + '/ray/tmp', # keep logs in same folder (keeping resources in same folder as "working_dir")
+    #_temp_dir=os.getcwd() + '/ray/tmp', # keep logs in same folder (keeping resources in same folder as "working_dir")
 )
 
 #ray.init(runtime_env={"py_modules": [os.getcwd()]})

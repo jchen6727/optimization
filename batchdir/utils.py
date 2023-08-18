@@ -62,7 +62,7 @@ def sge_run(config, cmdstr, cwd, cores, wait_interval= 5):
         time.sleep(wait_interval)
         data = dispatcher.get_shrun()
     #sdata = pandas.Series(json.loads(data)).astype(float)
-    dispatcher.clean(args='rw')
+    dispatcher.clean(args='rswo')
     return data #, stdouts, stderr
 
 def dbrun(config, cmdstr): 
@@ -96,10 +96,9 @@ def read_pkl(read_path: str):
     robject = pickle.load(fptr)
     return robject
 
-def get_freq(self: object):
+def get_freq(spike_data: str):
     freq_data = {}
-    data = self.sim.analysis.prepareSpikeData()['legendLabels']
-    for datm in data:
+    for datm in spike_data:
         pop = datm.split('\n')[0]
         freq = datm.split(' ')[-2]
         freq_data[pop] = freq

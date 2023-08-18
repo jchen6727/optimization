@@ -16,7 +16,7 @@ import argparse
 ## specify CLI to function
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--concurrency', default=1)
-parser.add_argument('-d', '--div', nargs=3, type=float, default=[0.5, 1.5, 3])
+parser.add_argument('-d', '--div', nargs=3, type=float, default=[0.5, 1.5, 2])
 parser.add_argument('-s', '--save', '-o', '--output', default="output/grid")
 #parser.add_argument('-p', '--params', nargs='+', default=['PYR->BC_AMPA', 'PYR->OLM_AMPA', 'PYR->PYR_AMPA'])
 parser.add_argument('-p', '--params', nargs='+', default=['Z'*80])
@@ -62,13 +62,14 @@ SAVESTR = "{}.csv".format(args['save'])
 
 ray.init(
     runtime_env={"working_dir": ".", # needed for import statements
-                 "excludes": ["*.csv", 
+                 "excludes": ["*.csv",
+                              "*.run",
+                              "*." 
                               "ray/",
                               "output/"]}, # limit the files copied
     # _temp_dir=os.getcwd() + '/ray/tmp', # keep logs in same folder (keeping resources in same folder as "working_dir")
     # OSError: AF_UNIX path length cannot exceed 107 bytes
 )
-
 
 #ray.init(runtime_env={"py_modules": [os.getcwd()]})
 TARGET = pandas.Series(
@@ -83,10 +84,10 @@ def objective(config):
     session.report(report)
 
 def sge_objective(config):
-    data, stdout, stderr = utils.sge_run(config=config, cwd=cwd, cmdstr=SH_CMDSTR, cores=5)
+    data = utils.sge_run(config=config, cwd=cwd, cmdstr=SH_CMDSTR, cores=5)
     sdata = pandas.read_json(data, typ='series', dtype=float)
     loss = utils.mse(sdata, TARGET)
-    session.report(dict(loss=loss, data=sdata, stdout=stdout, stderr=stderr))
+    session.report(dict(loss=loss, PYR=sdata['PYR'], BC=sdata['BC'], OLM=sdata['OLM']))
 
 algo = BasicVariantGenerator(max_concurrent=CONCURRENCY)
 
