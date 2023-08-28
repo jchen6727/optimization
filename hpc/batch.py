@@ -1,6 +1,5 @@
 from netpyne.batch import Batch
 
-
 def slurm(batchCfg):
     template = \
 """#!/bin/bash
@@ -17,9 +16,9 @@ def slurm(batchCfg):
 #SBATCH --mail-user=jchen.6727@gmail.com
 #SBATCH --mail-type=end
 
-time mpirun -n 4 nrniv -python -mpi init.py simConfig={cfgSavePath} netParams={netParamsSavePath}
+time mpirun -n 4 nrniv -python -mpi batchJob.py simConfig={cfgSavePath} netParams={netParamsSavePath}
 """
-    return {'submit': 'qsub', 'script': template.format(**batchCfg)}
+    return {'submit': 'sbatch', 'script': template.format(**batchCfg)}
 
 
 
@@ -32,8 +31,7 @@ def runBatch():
 
     b.runCfg = {'type': 'custom',
                 'function': slurm,
-                'run': False,
-                'script': 'batchJob.py'
+                'run': True,
     }
     b.run() # run batch
 

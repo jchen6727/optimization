@@ -2,7 +2,7 @@ from netpyne import specs
 try:
     from __main__ import cfg
 except:
-    import cfg
+    from cfg import cfg
 
 ### params ###
 # Network parameters
