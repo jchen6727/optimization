@@ -39,7 +39,7 @@ if __name__ == "__main__":
     sim.pc.barrier()
     if sim.rank == 0: # data out (print, and then file I/O if writefile specified)
         inputs = ca3.get_mappings()
-        spikes = get_freq(sim.analysis.prepareSpikeData()['legendLabels'])
+        spikes = sim.analysis.popAvgRates(show=False)
         out_json = json.dumps({**inputs, **spikes})
         print("===FREQUENCIES===\n")
         print(out_json)
@@ -47,4 +47,3 @@ if __name__ == "__main__":
             print("writing to {}".format(ca3.writefile))
             ca3.write(out_json)
             ca3.signal()
-
