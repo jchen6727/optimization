@@ -18,7 +18,9 @@ def slurm(batchCfg):
 
 time mpirun -n 4 nrniv -python -mpi batchJob.py simConfig={cfgSavePath} netParams={netParamsSavePath}
 """
-    return {'submit': 'sbatch {jobName}.sh'.format(**batchCfg), 'script': template.format(**batchCfg)}
+    return {'submit': 'sbatch {jobName}.sh'.format(**batchCfg),
+            'filename': '{jobName}.sh'.format(**batchCfg),
+            'script': template.format(**batchCfg)}
 
 
 
