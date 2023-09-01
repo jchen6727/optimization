@@ -20,7 +20,7 @@ time mpirun -n 4 nrniv -python -mpi batchJob.py simConfig={cfgSavePath} netParam
 """
     return {'submit': 'sbatch {jobPath}.sh'.format(**batchCfg),
             'filename': '{jobPath}.sh'.format(**batchCfg),
-            'script': template.format(**batchCfg)}
+            'filescript': template.format(**batchCfg)}
 
 
 
