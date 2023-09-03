@@ -16,6 +16,7 @@ def slurm(batchCfg):
 #SBATCH --mail-user=jchen.6727@gmail.com
 #SBATCH --mail-type=end
 
+echo "simulating job (ID: $SLURM_JOB_ID)"
 time mpirun -n 4 nrniv -python -mpi batchJob.py simConfig={cfgSavePath} netParams={netParamsSavePath}
 """
     return {'submit': 'sbatch {jobPath}.sh'.format(**batchCfg),
